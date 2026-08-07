@@ -1,0 +1,17 @@
+.leafParticle {
+  position: fixed;
+  font-size: 1.1rem;
+  pointer-events: none;
+  z-index: 100;
+  animation: leafFly 0.9s ease-out forwards;
+}
+@keyframes leafFly {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--lx), var(--ly)) rotate(var(--lr)) scale(0.3);
+  }
+}

@@ -2,18 +2,12 @@
 
 > A beautiful, offline-first dhikr (remembrance) counter that visualises your worship as a growing forest in Jannah.
 
-![Zikr App Screenshot](Screenshot.png)
-
----
-
-## ✨ What is this?
-
-Every time you recite a dhikr, a tree is planted in your personal Jannah forest. The app is built around a well-known hadith:
+Every time you recite a dhikr, a tree is planted in your personal Jannah forest. Built around a well-known hadith:
 
 > *"Whoever says 'Subḥānallāhi wa biḥamdihī' one hundred times a day, his sins will be forgiven even if they were as much as the foam of the sea."*
 > - Ṣaḥīḥ al-Bukhārī & Muslim
 
-The forest grows row by row, tree by tree - a living, visual record of your remembrance of Allah.
+This is a Vite + React + TypeScript port of the original single-file HTML app, with the same look, feel, and behavior.
 
 ---
 
@@ -34,16 +28,14 @@ The forest grows row by row, tree by tree - a living, visual record of your reme
 
 ## 🚀 Getting Started
 
-No build step, no dependencies, no server required.
+Requires [pnpm](https://pnpm.io/).
 
 ```bash
-git clone https://github.com/AbdulDevHub/zikr.git
-cd zikr
-open index.html        # macOS
-# or just double-click index.html in your file manager
+pnpm install
+pnpm dev       # start the dev server
+pnpm build     # production build → dist/
+pnpm preview   # preview the production build locally
 ```
-
-That's it. Open `index.html` in any modern browser.
 
 ---
 
@@ -51,56 +43,31 @@ That's it. Open `index.html` in any modern browser.
 
 ```
 zikr/
-├── index.html       # Everything - HTML, CSS, and JS in one file
-├── Screenshot.png   # App preview image
-└── README.md        # You are here
+├── index.html
+├── src/
+│   ├── main.tsx                  # React entry point
+│   ├── App.tsx                   # Top-level composition + keyboard handling
+│   ├── index.css                 # Reset, CSS variables, page layout
+│   ├── types/                    # Shared TS types
+│   ├── data/zikrs.ts             # ZIKRS + MILESTONES content
+│   ├── utils/                    # Geometry, PRNG, tree-shape, constants
+│   ├── hooks/
+│   │   ├── useForestState.ts     # Core app state: plant/reset, toasts, leaves, glow
+│   │   └── useStoredNumber.ts    # localStorage-backed number state
+│   └── components/
+│       ├── Panel/                # Left night-sky sidebar (counter, dhikr, controls)
+│       ├── Forest/                # Right-side scrollable tree canvas
+│       ├── Toast/                # Milestone / welcome-back toast
+│       └── Leaves/               # Flying leaf particles on each plant
+└── package.json
 ```
-
----
-
-## 🕌 The Dhikrs
-
-### 1 - Subḥānallāhi wa biḥamdihī · 🌿 1 tree per click
-
-**سُبْحَانَ اللَّهِ وَبِحَمْدِهِ**
-
-*"Glory be to Allah and all praise is due to Him"*
-
-The Prophet ﷺ said: *"Two words light on the tongue, heavy on the Scale, beloved to the Most Merciful."*
-- Ṣaḥīḥ al-Bukhārī & Muslim
-
----
-
-### 2 - The Four Praises · 🌳 4 trees per click
-
-**سُبْحَانَ اللَّهِ وَالْحَمْدُ لِلَّهِ وَلَا إِلَٰهَ إِلَّا اللَّهُ وَاللَّهُ أَكْبَرُ**
-
-*"Glory be to Allah, praise to Allah, none worthy of worship but Allah, Allah is Greatest"*
-
-The Prophet ﷺ said: *"The most beloved words to Allah are four - it does not matter which you begin with."*
-- Ṣaḥīḥ Muslim
-
----
-
-## 🌙 Laylatul Qadr Mode
-
-Enabling the **Laylatul Qadr** toggle multiplies every click by **1,000**, reflecting the Quranic verse:
-
-> *"The Night of Decree is better than a thousand months."* - Al-Qadr 97:3
-
-Use this during the last ten nights of Ramadan, or as a reminder of the immense weight that sincerity carries.
 
 ---
 
 ## 🛠️ Customisation
 
-All configuration lives at the top of the `<script>` block in `index.html`:
-
-- **`ZIKRS`** - add, remove, or edit dhikr entries (Arabic text, transliteration, meaning, tree count)
-- **`MILESTONES`** - customise the milestone messages and thresholds
-- **`COLS`** - trees per row (default: 50)
-- **`ROW_H`** - row height in pixels (default: 110)
-- **`VISUAL_CAP`** - maximum trees rendered in the DOM at once (default: 1,500)
+- **`src/data/zikrs.ts`** - add, remove, or edit dhikr entries, and milestone thresholds/messages
+- **`src/utils/constants.ts`** - `COLS` (trees per row), `ROW_H` (row height), `VISUAL_CAP` (max trees rendered at once)
 
 ---
 

@@ -1,0 +1,40 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --panel-w: 340px;
+  --gold: #f5c842;
+  --mint: #7dd9b0;
+  --text-main: #ede8d8;
+  --text-dim: #6a8090;
+  --sky-top: #060011;
+  --sky-mid: #0b1a3a;
+  --sky-bot: #0e2544;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Tajawal', sans-serif;
+  color: var(--text-main);
+  background: var(--sky-top);
+}
+
+#root {
+  display: flex;
+}
+
+button {
+  font-family: inherit;
+}
