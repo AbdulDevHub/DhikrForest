@@ -1,6 +1,6 @@
 export const TREES_PER_PAGE = 1000;
-export const GRID_COLS = 25; // 25 columns x 40 rows = 1000 slots per page
-export const GRID_ROWS = 40;
+export const GRID_COLS = 50; // 50 columns x 20 rows = 1000 slots per page
+export const GRID_ROWS = 20;
 
 export const STORAGE_KEYS = {
   totalTrees: 'zikr_trees',

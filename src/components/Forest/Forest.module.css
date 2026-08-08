@@ -16,19 +16,13 @@
 
 .canvasContainer {
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 16px 20px 24px 20px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(245, 200, 66, 0.3) transparent;
-}
-
-.canvasContainer::-webkit-scrollbar {
-  width: 6px;
-}
-.canvasContainer::-webkit-scrollbar-thumb {
-  background: rgba(245, 200, 66, 0.3);
-  border-radius: 3px;
+  min-height: 0;
+  overflow: hidden;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }
 
 /* Pagination Navigation Bar */
@@ -87,106 +81,37 @@
   opacity: 0.85;
 }
 
-/* Uniform Top-View Grid (25 Columns x 40 Rows = 1000 slots) */
-.forestGrid {
-  display: grid;
-  grid-template-columns: repeat(25, 1fr);
-  gap: 4px;
+/* Canvas Wrapper and Element */
+.canvasWrapper {
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  align-items: center;
-  justify-items: center;
-}
-
-.gridSlot {
-  width: 100%;
-  aspect-ratio: 1 / 1;
+  height: 100%;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
 }
 
-/* Tree Grow Animation */
-.treeGrowAnim {
-  animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
-}
-
-@keyframes popIn {
-  0% {
-    transform: scale(0);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-/* Top-View Tree Styling */
-.treeTopView {
-  position: relative;
+.canvasElement {
   width: 100%;
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: transform 0.2s ease;
+  display: block;
 }
 
-.treeTopView:hover {
-  transform: scale(1.25);
-  z-index: 20;
-}
-
-.treeSvg {
-  width: 100%;
-  height: 100%;
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.6));
-}
-
-/* Laylatul Qadr Special Tree Aura */
-.treeQadr {
-  border-radius: 50%;
-  box-shadow: 0 0 12px 3px rgba(245, 200, 66, 0.7);
-  animation: qadrGlow 2s infinite alternate ease-in-out;
-}
-
-@keyframes qadrGlow {
-  0% {
-    box-shadow: 0 0 8px 2px rgba(245, 200, 66, 0.5);
-  }
-  100% {
-    box-shadow: 0 0 18px 6px rgba(245, 208, 96, 0.95);
-  }
-}
-
-/* Hover Tooltip for Special Qadr Trees */
-.qadrTooltip {
+/* Hover Tooltip for Special Qadr Trees on Canvas */
+.qadrTooltipCanvas {
   position: absolute;
-  top: -24px;
-  left: 50%;
-  transform: translateX(-50%) translateY(4px);
+  transform: translateX(-50%) translateY(-100%);
   background: rgba(10, 18, 30, 0.95);
   border: 1px solid #f59e0b;
   color: #fef08a;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 800;
-  padding: 2px 7px;
+  padding: 3px 8px;
   border-radius: 6px;
   white-space: nowrap;
   pointer-events: none;
-  opacity: 0;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
   z-index: 30;
-}
-
-.treeTopView:hover .qadrTooltip {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
 }
 
 /* Flash */
@@ -205,19 +130,5 @@
   }
   100% {
     opacity: 0;
-  }
-}
-
-@media (max-width: 900px) {
-  .forestGrid {
-    grid-template-columns: repeat(20, 1fr);
-    gap: 3px;
-  }
-}
-
-@media (max-width: 600px) {
-  .forestGrid {
-    grid-template-columns: repeat(15, 1fr);
-    gap: 2px;
   }
 }
