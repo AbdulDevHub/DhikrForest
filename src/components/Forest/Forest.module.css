@@ -6,12 +6,12 @@
   display: flex;
   flex-direction: column;
 
-  /* Rich Realistic Earthy Dark Soil Dirt Background */
+  /* Rich Fertile Warm Earthy Soil Dirt Background */
   background:
-    radial-gradient(circle at 20% 20%, rgba(85, 52, 28, 0.4) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(60, 36, 18, 0.5) 0%, transparent 60%),
-    radial-gradient(ellipse at 50% 50%, #3e2617 0%, #29170c 60%, #180d06 100%);
-  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.85);
+    radial-gradient(circle at 20% 20%, rgba(160, 105, 55, 0.35) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(135, 82, 38, 0.4) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 50%, #6c472b 0%, #52341e 50%, #3a2212 85%, #26150a 100%);
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.65);
 }
 
 .canvasContainer {
@@ -31,7 +31,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 24px;
-  background: rgba(18, 10, 5, 0.85);
+  background: rgba(34, 21, 12, 0.88);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid rgba(245, 200, 66, 0.2);
   z-index: 10;

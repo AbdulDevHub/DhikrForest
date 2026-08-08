@@ -20,6 +20,7 @@ export default function App() {
     bumpKey,
     isGlowing,
     toastMessage,
+    showToast,
     leaves,
     currentPage,
     setCurrentPage,
@@ -50,6 +51,9 @@ export default function App() {
 
   return (
     <>
+      <h1 style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', border: 0 }}>
+        DhikrForest — Plant Trees in Jannah | Visual Dhikr Counter
+      </h1>
       <Panel
         totalTrees={totalTrees}
         sessionCount={sessionCount}
@@ -62,6 +66,7 @@ export default function App() {
         onReset={reset}
         bumpKey={bumpKey}
         isGlowing={isGlowing}
+        onToast={showToast}
         plantButtonRef={plantButtonRef}
         resetButtonRef={resetButtonRef}
       />

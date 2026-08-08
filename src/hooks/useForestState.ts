@@ -194,6 +194,7 @@ export function useForestState() {
     bumpKey,
     isGlowing,
     toastMessage,
+    showToast,
     leaves,
     currentPage,
     setCurrentPage,

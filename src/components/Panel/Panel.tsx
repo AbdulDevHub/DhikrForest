@@ -8,6 +8,7 @@ import ZikrBlock from './ZikrBlock';
 import ZikrNav from './ZikrNav';
 import PlantButton from './PlantButton';
 import StatsRow from './StatsRow';
+import MilestonePane from './MilestonePane';
 import QadrToggle from './QadrToggle';
 import HadithPanel from './HadithPanel';
 import ResetButton from './ResetButton';
@@ -24,6 +25,7 @@ interface PanelProps {
   onReset: () => void;
   bumpKey: number;
   isGlowing: boolean;
+  onToast?: (msg: string) => void;
   plantButtonRef: RefObject<HTMLButtonElement | null>;
   resetButtonRef: RefObject<HTMLButtonElement | null>;
 }
@@ -40,11 +42,13 @@ export default function Panel({
   onReset,
   bumpKey,
   isGlowing,
+  onToast,
   plantButtonRef,
   resetButtonRef,
 }: PanelProps) {
   return (
-    <div
+    <aside
+      aria-label="Dhikr Control Panel"
       className={[
         styles.panel,
         qadrOn ? styles.panelQadrActive : '',
@@ -67,10 +71,12 @@ export default function Panel({
 
       <StatsRow sessionCount={sessionCount} rows={rows} />
 
+      <MilestonePane totalTrees={totalTrees} onToast={onToast} />
+
       <QadrToggle qadrOn={qadrOn} onToggle={onToggleQadr} />
 
       <HadithPanel />
       <ResetButton ref={resetButtonRef} onReset={onReset} />
-    </div>
+    </aside>
   );
 }

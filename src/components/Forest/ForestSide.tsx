@@ -21,7 +21,7 @@ export default function ForestSide({
   flashKey,
 }: ForestSideProps) {
   return (
-    <div className={styles.forestSide}>
+    <main aria-label="Jannah Forest Canvas" className={styles.forestSide}>
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
@@ -35,6 +35,6 @@ export default function ForestSide({
       </div>
 
       <Flash flashKey={flashKey} />
-    </div>
+    </main>
   );
 }

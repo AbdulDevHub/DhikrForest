@@ -441,3 +441,198 @@
     min-height: 100vh;
   }
 }
+
+/* Milestone Pane & Goal Tracker */
+.milestonePane {
+  width: 100%;
+}
+
+.milestoneCard {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(245, 200, 66, 0.22);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: inset 0 0 12px rgba(245, 200, 66, 0.05);
+}
+
+.milestoneCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.milestoneCardTitle {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.03em;
+}
+
+.viewGoalsBtn {
+  background: rgba(245, 200, 66, 0.12);
+  border: 1px solid rgba(245, 200, 66, 0.3);
+  color: var(--gold);
+  font-size: 0.64rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Tajawal', sans-serif;
+}
+.viewGoalsBtn:hover {
+  background: rgba(245, 200, 66, 0.25);
+  border-color: var(--gold);
+  transform: translateY(-1px);
+}
+
+.progressBarBg {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progressBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #f5c842);
+  border-radius: 3px;
+  transition: width 0.35s ease;
+  box-shadow: 0 0 8px rgba(245, 200, 66, 0.6);
+}
+
+.milestoneMeta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.62rem;
+  color: var(--mint);
+  opacity: 0.9;
+  font-weight: 600;
+}
+
+.milestoneQuote {
+  font-size: 0.64rem;
+  color: var(--text-dim);
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.85;
+}
+
+/* Modal Goals List */
+.milestoneList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 4px;
+  margin-top: 8px;
+}
+
+.milestoneList::-webkit-scrollbar {
+  width: 5px;
+}
+.milestoneList::-webkit-scrollbar-thumb {
+  background: rgba(245, 200, 66, 0.3);
+  border-radius: 4px;
+}
+
+.milestoneItem {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.milestoneItem:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(245, 200, 66, 0.3);
+}
+
+.milestoneItemAchieved {
+  border-color: rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.milestoneItemActive {
+  border-color: rgba(245, 200, 66, 0.5);
+  background: rgba(245, 200, 66, 0.08);
+  box-shadow: 0 0 14px rgba(245, 200, 66, 0.15);
+}
+
+.milestoneItemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.milestoneCount {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.milestoneBadge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.03em;
+}
+
+.badgeAchieved {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.badgeActive {
+  background: rgba(245, 200, 66, 0.2);
+  color: var(--gold);
+  border: 1px solid rgba(245, 200, 66, 0.4);
+  animation: pulseBadge 1.8s ease-in-out infinite;
+}
+
+@keyframes pulseBadge {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+.badgeLocked {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.milestoneItemText {
+  font-size: 0.76rem;
+  color: var(--text-main);
+  line-height: 1.4;
+}
+
+.itemProgressContainer {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.itemProgressMeta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6rem;
+  color: var(--mint);
+}
+
