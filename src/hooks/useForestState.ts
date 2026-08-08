@@ -1,46 +1,50 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ZIKRS, MILESTONE_THRESHOLDS, MILESTONES } from '../data/zikrs';
-import { MAX_TREE_COUNT, STORAGE_KEYS } from '../utils/constants';
-import { numRows } from '../utils/geometry';
+import { STORAGE_KEYS, TREES_PER_PAGE } from '../utils/constants';
+import { numPages, numRows } from '../utils/geometry';
 import { useStoredNumber } from './useStoredNumber';
-import type { LeafParticle } from '../types';
+import type { LeafParticle, TreeItem } from '../types';
 
 let leafIdSeq = 0;
 
-/** One-time migration from the old position-array localStorage format. */
-function migrateLegacyPositions() {
-  const old = localStorage.getItem(STORAGE_KEYS.legacyPositions);
-  if (old && !localStorage.getItem(STORAGE_KEYS.treeCount)) {
-    try {
-      const parsed = JSON.parse(old);
-      if (Array.isArray(parsed)) {
-        localStorage.setItem(STORAGE_KEYS.treeCount, String(parsed.length));
-      }
-    } catch {
-      /* ignore malformed legacy data */
+function loadStoredItems(): TreeItem[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.treeItems);
+    if (raw) {
+      return JSON.parse(raw);
+    }
+  } catch {
+    /* ignore parse error */
+  }
+
+  // Fallback / legacy migration: if treeItems not initialized yet but treeCount exists
+  const legacyCountStr = localStorage.getItem(STORAGE_KEYS.legacyTreeCount);
+  if (legacyCountStr) {
+    const count = parseInt(legacyCountStr, 10) || 0;
+    if (count > 0) {
+      const items: TreeItem[] = Array.from({ length: count }, (_, i) => ({
+        id: i,
+        type: 'standard',
+      }));
+      localStorage.setItem(STORAGE_KEYS.treeItems, JSON.stringify(items));
+      return items;
     }
   }
-  localStorage.removeItem(STORAGE_KEYS.legacyPositions);
+
+  return [];
 }
-migrateLegacyPositions();
 
 export function useForestState() {
   const [totalTrees, setTotalTrees] = useStoredNumber(STORAGE_KEYS.totalTrees, 0);
-  const [treeCount, setTreeCount] = useStoredNumber(STORAGE_KEYS.treeCount, 0);
+  const [treeItems, setTreeItems] = useState<TreeItem[]>(loadStoredItems);
+  const [currentPage, setCurrentPage] = useState<number>(0);
   const [sessionCount, setSessionCount] = useState(0);
   const [currentZikr, setCurrentZikr] = useState(0);
   const [qadrOn, setQadrOn] = useState(false);
 
-  // Ephemeral, replay-on-change triggers for CSS animations. These wrap
-  // small, stateless nodes, so remounting them via `key` to replay a
-  // keyframe animation is cheap and safe.
   const [flashKey, setFlashKey] = useState(0);
   const [bumpKey, setBumpKey] = useState(0);
-  const [scrollKey, setScrollKey] = useState(0);
 
-  // The sky-pulse glow wraps the whole panel (which has its own internal
-  // state, e.g. the hadith popover), so it's a real boolean + timer rather
-  // than a remount trick.
   const [isGlowing, setIsGlowing] = useState(false);
   const glowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pulseGlow = useCallback((durationMs = 1400) => {
@@ -51,8 +55,16 @@ export function useForestState() {
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const [leaves, setLeaves] = useState<LeafParticle[]>([]);
+
+  // Persist treeItems to localStorage whenever changed
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.treeItems, JSON.stringify(treeItems));
+    } catch {
+      /* ignore storage quota limits */
+    }
+  }, [treeItems]);
 
   const showToast = useCallback(
     (msg: string) => {
@@ -71,7 +83,7 @@ export function useForestState() {
     };
   }, []);
 
-  // Welcome-back toast on load, mirroring the original app's behaviour.
+  // Welcome back toast on initial load
   useEffect(() => {
     if (totalTrees > 0) {
       const t = setTimeout(() => {
@@ -79,7 +91,6 @@ export function useForestState() {
       }, 900);
       return () => clearTimeout(t);
     }
-    // Only ever run once on mount — subsequent totalTrees changes shouldn't retrigger this.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -110,20 +121,29 @@ export function useForestState() {
   const plant = useCallback(
     (buttonRect: DOMRect | null) => {
       const z = ZIKRS[currentZikr];
-      const mult = qadrOn ? 1000 : 1;
-      const treesToAdd = z.trees * mult;
-      const prevTotal = totalTrees;
+      const itemsToPlant = z.trees; // 1 or 4 items per click
+      const valuePerItem = qadrOn ? 1000 : 1;
+      const treesToAddTotal = itemsToPlant * valuePerItem;
 
-      const nextTotal = prevTotal + treesToAdd;
-      const nextTreeCount = Math.min(MAX_TREE_COUNT, treeCount + treesToAdd);
+      const prevTotal = totalTrees;
+      const nextTotal = prevTotal + treesToAddTotal;
+
+      const newItems: TreeItem[] = Array.from({ length: itemsToPlant }, (_, i) => ({
+        id: Date.now() + i + Math.random(),
+        type: qadrOn ? 'qadr' : 'standard',
+      }));
+
+      const nextTreeItems = [...treeItems, ...newItems];
+      const totalPages = numPages(nextTreeItems.length);
+      const newestPageIndex = totalPages - 1;
 
       setTotalTrees(nextTotal);
-      setSessionCount((s) => s + treesToAdd);
-      setTreeCount(nextTreeCount);
+      setSessionCount((s) => s + treesToAddTotal);
+      setTreeItems(nextTreeItems);
+      setCurrentPage(newestPageIndex);
 
       setFlashKey((k) => k + 1);
       setBumpKey((k) => k + 1);
-      setScrollKey((k) => k + 1);
       spawnLeaves(buttonRect);
 
       for (const m of MILESTONE_THRESHOLDS) {
@@ -135,14 +155,15 @@ export function useForestState() {
 
       if (qadrOn) pulseGlow(1400);
     },
-    [currentZikr, qadrOn, totalTrees, treeCount, setTotalTrees, setTreeCount, spawnLeaves, showToast, pulseGlow]
+    [currentZikr, qadrOn, totalTrees, treeItems, setTotalTrees, spawnLeaves, showToast, pulseGlow]
   );
 
   const reset = useCallback(() => {
     setTotalTrees(0);
     setSessionCount(0);
-    setTreeCount(0);
-  }, [setTotalTrees, setTreeCount]);
+    setTreeItems([]);
+    setCurrentPage(0);
+  }, [setTotalTrees]);
 
   const toggleQadr = useCallback(() => {
     setQadrOn((on) => {
@@ -152,11 +173,17 @@ export function useForestState() {
     });
   }, [showToast]);
 
+  const totalPages = numPages(treeItems.length);
+
+  // Active page's subset of items
+  const startIdx = currentPage * TREES_PER_PAGE;
+  const activePageItems = treeItems.slice(startIdx, startIdx + TREES_PER_PAGE);
+
   return {
     totalTrees,
     sessionCount,
-    treeCount,
-    rows: numRows(treeCount),
+    treeCount: treeItems.length,
+    rows: numRows(activePageItems.length),
     currentZikr,
     setCurrentZikr,
     qadrOn,
@@ -166,8 +193,11 @@ export function useForestState() {
     flashKey,
     bumpKey,
     isGlowing,
-    scrollKey,
     toastMessage,
     leaves,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    activePageItems,
   };
 }

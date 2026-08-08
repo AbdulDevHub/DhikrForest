@@ -28,17 +28,36 @@ export default function HadithPanel() {
         ☪️ About these Zikrs
       </button>
 
-      <div ref={panelRef} className={`${styles.hadith} ${open ? styles.hadithShow : ''}`}>
-        <strong>"سُبْحَانَ اللَّهِ وَبِحَمْدِهِ" — Subḥānallāhi wa biḥamdihī</strong>
-        The Prophet ﷺ said: <em>"Two words light on the tongue, heavy on the Scale, beloved to the Most Merciful."</em>
-        {' '}— Ṣaḥīḥ al-Bukhārī &amp; Muslim &nbsp;·&nbsp;
-        <strong style={{ display: 'inline', fontSize: '.74rem' }}>Plants 1 tree 🌿</strong>
-        <div className={styles.sep} />
-        <strong>"سُبْحَانَ اللَّهِ وَالْحَمْدُ لِلَّهِ وَلَا إِلَٰهَ إِلَّا اللَّهُ وَاللَّهُ أَكْبَرُ"</strong>
-        The Prophet ﷺ said: <em>"The most beloved words to Allah are four — it does not matter which you begin with."</em>
-        {' '}— Ṣaḥīḥ Muslim &nbsp;·&nbsp;
-        <strong style={{ display: 'inline', fontSize: '.74rem' }}>Plants 4 trees 🌳🌳🌳🌳</strong>
-      </div>
+      {open && (
+        <div className={styles.hadithBackdrop} onClick={() => setOpen(false)}>
+          <div
+            ref={panelRef}
+            className={`${styles.hadith} ${styles.hadithShow}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.hadithHeader}>
+              <span>☪️ Hadith &amp; Virtues of Zikr</span>
+              <button className={styles.hadithClose} onClick={() => setOpen(false)}>
+                ✕
+              </button>
+            </div>
+
+            <div className={styles.hadithBody}>
+              <strong>"سُبْحَانَ اللَّهِ وَبِحَمْدِهِ" — Subḥānallāhi wa biḥamdihī</strong>
+              The Prophet ﷺ said: <em>"Two words light on the tongue, heavy on the Scale, beloved to the Most Merciful."</em>
+              {' '}— Ṣaḥīḥ al-Bukhārī &amp; Muslim &nbsp;·&nbsp;
+              <strong style={{ display: 'inline', fontSize: '.74rem' }}>Plants 1 tree 🌿</strong>
+
+              <div className={styles.sep} />
+
+              <strong>"سُبْحَانَ اللَّهِ وَالْحَمْدُ لِلَّهِ وَلَا إِلَٰهَ إِلَّا اللَّهُ وَاللَّهُ أَكْبَرُ"</strong>
+              The Prophet ﷺ said: <em>"The most beloved words to Allah are four — it does not matter which you begin with."</em>
+              {' '}— Ṣaḥīḥ Muslim &nbsp;·&nbsp;
+              <strong style={{ display: 'inline', fontSize: '.74rem' }}>Plants 4 trees 🌳🌳🌳🌳</strong>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

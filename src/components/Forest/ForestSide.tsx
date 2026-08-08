@@ -1,54 +1,39 @@
-import { useEffect, useRef, useState } from 'react';
-import { COLS } from '../../utils/constants';
-import { canvasHeightPx, scrollTargetPx } from '../../utils/geometry';
+import type { TreeItem } from '../../types';
+import { TREES_PER_PAGE } from '../../utils/constants';
 import ForestCanvas from './ForestCanvas';
-import ScrollHint from './ScrollHint';
+import Pagination from './Pagination';
 import Flash from './Flash';
 import styles from './Forest.module.css';
 
 interface ForestSideProps {
-  treeCount: number;
-  scrollKey: number;
+  activePageItems: TreeItem[];
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (pageIndex: number) => void;
   flashKey: number;
 }
 
-export default function ForestSide({ treeCount, scrollKey, flashKey }: ForestSideProps) {
-  const sideRef = useRef<HTMLDivElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [containerHeight, setContainerHeight] = useState(0);
-  const hasMountedRef = useRef(false);
-
-  // Track the container's height so we know how far to scroll and whether
-  // the "scroll to see older trees" hint should show.
-  useEffect(() => {
-    const el = sideRef.current;
-    if (!el) return;
-    const observer = new ResizeObserver(([entry]) => {
-      setContainerHeight(entry.contentRect.height);
-    });
-    observer.observe(el);
-    setContainerHeight(el.clientHeight);
-    return () => observer.disconnect();
-  }, []);
-
-  // Scroll to the latest row: instantly on first load, smoothly afterwards.
-  useEffect(() => {
-    const scrollEl = scrollRef.current;
-    if (!scrollEl || containerHeight === 0) return;
-    const target = scrollTargetPx(treeCount, containerHeight);
-    scrollEl.scrollTo({ top: target, behavior: hasMountedRef.current ? 'smooth' : 'instant' });
-    hasMountedRef.current = true;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scrollKey, containerHeight]);
-
-  const hintVisible = treeCount > COLS && canvasHeightPx(treeCount) > containerHeight;
-
+export default function ForestSide({
+  activePageItems,
+  currentPage,
+  totalPages,
+  onPageChange,
+  flashKey,
+}: ForestSideProps) {
   return (
-    <div ref={sideRef} className={styles.forestSide}>
-      <div ref={scrollRef} className={styles.forestScroll}>
-        <ForestCanvas treeCount={treeCount} />
+    <div className={styles.forestSide}>
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+        treesOnCurrentPage={activePageItems.length}
+        maxTreesPerPage={TREES_PER_PAGE}
+      />
+
+      <div className={styles.canvasContainer}>
+        <ForestCanvas items={activePageItems} />
       </div>
-      <ScrollHint visible={hintVisible} />
+
       <Flash flashKey={flashKey} />
     </div>
   );

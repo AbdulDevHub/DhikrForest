@@ -9,7 +9,6 @@ export default function App() {
   const {
     totalTrees,
     sessionCount,
-    treeCount,
     rows,
     currentZikr,
     setCurrentZikr,
@@ -20,9 +19,12 @@ export default function App() {
     flashKey,
     bumpKey,
     isGlowing,
-    scrollKey,
     toastMessage,
     leaves,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    activePageItems,
   } = useForestState();
 
   const plantButtonRef = useRef<HTMLButtonElement>(null);
@@ -32,13 +34,9 @@ export default function App() {
     plant(plantButtonRef.current?.getBoundingClientRect() ?? null);
   };
 
-  // Keep a ref to the latest handlePlant so the keydown listener (registered
-  // once) always calls the current version without needing to re-subscribe.
   const handlePlantRef = useRef(handlePlant);
   handlePlantRef.current = handlePlant;
 
-  // Enter / Space plants a tree from anywhere, except while the reset
-  // button is focused — this mirrors the original app's keyboard handling.
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if ((e.key === 'Enter' || e.key === ' ') && document.activeElement !== resetButtonRef.current) {
@@ -68,7 +66,13 @@ export default function App() {
         resetButtonRef={resetButtonRef}
       />
 
-      <ForestSide treeCount={treeCount} scrollKey={scrollKey} flashKey={flashKey} />
+      <ForestSide
+        activePageItems={activePageItems}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        flashKey={flashKey}
+      />
 
       <Toast message={toastMessage} />
 

@@ -1,32 +1,25 @@
 import { useEffect, useRef } from 'react';
-import { VISUAL_CAP } from '../../utils/constants';
-import { canvasHeightPx } from '../../utils/geometry';
+import type { TreeItem } from '../../types';
 import Tree from './Tree';
 import styles from './Forest.module.css';
 
 interface ForestCanvasProps {
-  treeCount: number;
+  items: TreeItem[];
 }
 
-export default function ForestCanvas({ treeCount }: ForestCanvasProps) {
-  // Tracks the tree count as of the previous render, so only indices added
-  // since then play the "grow" animation; everything already on screen —
-  // including trees restored from localStorage on first load — stays put.
-  const prevTreeCountRef = useRef(treeCount);
+export default function ForestCanvas({ items }: ForestCanvasProps) {
+  const prevCountRef = useRef(items.length);
+
   useEffect(() => {
-    prevTreeCountRef.current = treeCount;
-  }, [treeCount]);
+    prevCountRef.current = items.length;
+  }, [items.length]);
 
-  const visibleStart = Math.max(0, treeCount - VISUAL_CAP);
-  const newSince = prevTreeCountRef.current;
-
-  const indices: number[] = [];
-  for (let i = visibleStart; i < treeCount; i++) indices.push(i);
+  const prevCount = prevCountRef.current;
 
   return (
-    <div className={styles.forestCanvas} style={{ height: canvasHeightPx(treeCount) }}>
-      {indices.map((idx) => (
-        <Tree key={idx} idx={idx} treeCount={treeCount} animate={idx >= newSince} />
+    <div className={styles.forestGrid}>
+      {items.map((item, idx) => (
+        <Tree key={item.id} item={item} animate={idx >= prevCount} />
       ))}
     </div>
   );

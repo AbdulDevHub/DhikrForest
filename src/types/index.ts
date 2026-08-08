@@ -23,3 +23,11 @@ export interface TreePalette {
   mid: string;
   bot: string;
 }
+
+export type TreeType = 'standard' | 'qadr';
+
+export interface TreeItem {
+  id: number;
+  type: TreeType;
+}
+

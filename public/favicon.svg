@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <radialGradient id="skyGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#143d22" />
+      <stop offset="100%" stop-color="#08180e" />
+    </radialGradient>
+    <linearGradient id="leafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="50%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="moonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047" />
+      <stop offset="100%" stop-color="#eab308" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background Circle -->
+  <circle cx="32" cy="32" r="30" fill="url(#skyGrad)" stroke="#10b981" stroke-width="2" />
+  
+  <!-- Moon Crescent -->
+  <path d="M 44,14 A 15,15 0 1,0 46,38 A 12,12 0 1,1 44,14 Z" fill="url(#moonGrad)" opacity="0.9" />
+
+  <!-- Central Tree Silhouette -->
+  <!-- Trunk -->
+  <rect x="29" y="38" width="6" height="14" rx="2" fill="#78350f" />
+  <!-- Canopy layers -->
+  <circle cx="32" cy="26" r="13" fill="url(#leafGrad)" />
+  <circle cx="24" cy="30" r="9" fill="url(#leafGrad)" opacity="0.9" />
+  <circle cx="40" cy="30" r="9" fill="url(#leafGrad)" opacity="0.9" />
+  <circle cx="32" cy="20" r="8" fill="#6ee7b7" opacity="0.3" />
+
+  <!-- Stars -->
+  <circle cx="16" cy="18" r="1.5" fill="#fef08a" />
+  <circle cx="48" cy="22" r="1" fill="#ffffff" />
+  <circle cx="14" cy="34" r="1" fill="#ffffff" />
+</svg>
