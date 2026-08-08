@@ -1,0 +1,19 @@
+{
+  "name": "DhikrForest — Plant Trees in Jannah",
+  "short_name": "DhikrForest",
+  "description": "A beautiful, offline-first Islamic dhikr counter that visualises your worship as a growing forest in Jannah.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#060011",
+  "theme_color": "#060011",
+  "orientation": "any",
+  "categories": ["lifestyle", "utilities"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
