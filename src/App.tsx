@@ -4,6 +4,7 @@ import ForestSide from './components/Forest/ForestSide';
 import Toast from './components/Toast/Toast';
 import LeafParticles from './components/Leaves/LeafParticles';
 import { useForestState } from './hooks/useForestState';
+import { useTimeOfDay } from './hooks/useTimeOfDay';
 
 export default function App() {
   const {
@@ -27,6 +28,8 @@ export default function App() {
     totalPages,
     activePageItems,
   } = useForestState();
+
+  const { timeMode, setTimeMode, effectiveTimeMode } = useTimeOfDay(qadrOn);
 
   const plantButtonRef = useRef<HTMLButtonElement>(null);
   const resetButtonRef = useRef<HTMLButtonElement>(null);
@@ -69,6 +72,9 @@ export default function App() {
         onToast={showToast}
         plantButtonRef={plantButtonRef}
         resetButtonRef={resetButtonRef}
+        effectiveTimeMode={effectiveTimeMode}
+        timeMode={timeMode}
+        onTimeMode={setTimeMode}
       />
 
       <ForestSide
@@ -77,6 +83,7 @@ export default function App() {
         totalPages={totalPages}
         onPageChange={setCurrentPage}
         flashKey={flashKey}
+        effectiveTimeMode={effectiveTimeMode}
       />
 
       <Toast message={toastMessage} />

@@ -1,8 +1,10 @@
 import type { RefObject } from 'react';
+import type { EffectiveTimeOfDay, TimeOfDayMode } from '../../types';
 import { ZIKRS } from '../../data/zikrs';
 import styles from './Panel.module.css';
 import Stars from './Stars';
 import Moon from './Moon';
+import Sun from './Sun';
 import Counter from './Counter';
 import ZikrBlock from './ZikrBlock';
 import ZikrNav from './ZikrNav';
@@ -12,6 +14,7 @@ import MilestonePane from './MilestonePane';
 import QadrToggle from './QadrToggle';
 import HadithPanel from './HadithPanel';
 import ResetButton from './ResetButton';
+import TimeSelector from './TimeSelector';
 
 interface PanelProps {
   totalTrees: number;
@@ -28,7 +31,17 @@ interface PanelProps {
   onToast?: (msg: string) => void;
   plantButtonRef: RefObject<HTMLButtonElement | null>;
   resetButtonRef: RefObject<HTMLButtonElement | null>;
+  effectiveTimeMode: EffectiveTimeOfDay;
+  timeMode: TimeOfDayMode;
+  onTimeMode: (mode: TimeOfDayMode) => void;
 }
+
+const TIME_CLASS: Record<EffectiveTimeOfDay, string> = {
+  morning:   'panelMorning',
+  afternoon: 'panelAfternoon',
+  night:     '',
+  qadr:      'panelQadrActive',
+};
 
 export default function Panel({
   totalTrees,
@@ -45,20 +58,28 @@ export default function Panel({
   onToast,
   plantButtonRef,
   resetButtonRef,
+  effectiveTimeMode,
+  timeMode,
+  onTimeMode,
 }: PanelProps) {
+  const showSun  = effectiveTimeMode === 'morning' || effectiveTimeMode === 'afternoon';
+  const showMoon = effectiveTimeMode === 'night' || effectiveTimeMode === 'qadr';
+  const timeCls  = TIME_CLASS[effectiveTimeMode] ? styles[TIME_CLASS[effectiveTimeMode] as keyof typeof styles] : '';
+
   return (
     <aside
       aria-label="Dhikr Control Panel"
       className={[
         styles.panel,
-        qadrOn ? styles.panelQadrActive : '',
+        timeCls,
         isGlowing ? styles.panelGlow : '',
       ]
         .filter(Boolean)
         .join(' ')}
     >
-      <Stars />
-      <Moon />
+      {showMoon && <Stars />}
+      {showMoon && <Moon />}
+      {showSun  && <Sun mode={effectiveTimeMode} />}
 
       <Counter totalTrees={totalTrees} bumpKey={bumpKey} />
 
@@ -74,6 +95,8 @@ export default function Panel({
       <MilestonePane totalTrees={totalTrees} onToast={onToast} />
 
       <QadrToggle qadrOn={qadrOn} onToggle={onToggleQadr} />
+
+      <TimeSelector timeMode={timeMode} onChange={onTimeMode} />
 
       <HadithPanel />
       <ResetButton ref={resetButtonRef} onReset={onReset} />

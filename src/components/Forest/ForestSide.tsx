@@ -1,9 +1,16 @@
-import type { TreeItem } from '../../types';
+import type { EffectiveTimeOfDay, TreeItem } from '../../types';
 import { TREES_PER_PAGE } from '../../utils/constants';
 import ForestCanvas from './ForestCanvas';
 import Pagination from './Pagination';
 import Flash from './Flash';
 import styles from './Forest.module.css';
+
+const SOIL_CLASS: Record<EffectiveTimeOfDay, string> = {
+  morning:   'soilMorning',
+  afternoon: 'soilAfternoon',
+  night:     'soilNight',
+  qadr:      'soilQadr',
+};
 
 interface ForestSideProps {
   activePageItems: TreeItem[];
@@ -11,6 +18,7 @@ interface ForestSideProps {
   totalPages: number;
   onPageChange: (pageIndex: number) => void;
   flashKey: number;
+  effectiveTimeMode: EffectiveTimeOfDay;
 }
 
 export default function ForestSide({
@@ -19,9 +27,15 @@ export default function ForestSide({
   totalPages,
   onPageChange,
   flashKey,
+  effectiveTimeMode,
 }: ForestSideProps) {
+  const soilCls = styles[SOIL_CLASS[effectiveTimeMode] as keyof typeof styles] ?? '';
+
   return (
-    <main aria-label="Jannah Forest Canvas" className={styles.forestSide}>
+    <main
+      aria-label="Jannah Forest Canvas"
+      className={`${styles.forestSide} ${soilCls}`}
+    >
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}

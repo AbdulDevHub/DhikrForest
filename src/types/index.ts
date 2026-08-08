@@ -26,8 +26,11 @@ export interface TreePalette {
 
 export type TreeType = 'standard' | 'qadr';
 
-export interface TreeItem {
+export type TreeItem = {
   id: number;
   type: TreeType;
-}
+};
+
+export type TimeOfDayMode = 'auto' | 'morning' | 'afternoon' | 'night';
+export type EffectiveTimeOfDay = 'morning' | 'afternoon' | 'night' | 'qadr';
 

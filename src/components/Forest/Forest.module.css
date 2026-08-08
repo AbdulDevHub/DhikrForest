@@ -6,13 +6,56 @@
   display: flex;
   flex-direction: column;
 
-  /* Rich Fertile Warm Earthy Soil Dirt Background */
+  /* Default (night) — Rich Fertile Warm Earthy Soil Dirt Background */
+  background:
+    radial-gradient(circle at 20% 20%, rgba(160, 105, 55, 0.35) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(135, 82, 38, 0.4) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 50%, #6c472b 0%, #52341e 50%, #3a2212 85%, #26150a 100%);
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.65);
+  transition: background 1.2s ease, box-shadow 1.2s ease;
+}
+
+/* ── Soil Theme Variants ──────────────────────────────────────── */
+
+/* Night soil — dark rich chocolate earth (same as default) */
+.soilNight {
   background:
     radial-gradient(circle at 20% 20%, rgba(160, 105, 55, 0.35) 0%, transparent 50%),
     radial-gradient(circle at 80% 80%, rgba(135, 82, 38, 0.4) 0%, transparent 60%),
     radial-gradient(ellipse at 50% 50%, #6c472b 0%, #52341e 50%, #3a2212 85%, #26150a 100%);
   box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.65);
 }
+
+/* Morning soil — warm golden-brown, gentle dawn light */
+.soilMorning {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 180, 80, 0.22) 0%, transparent 55%),
+    radial-gradient(circle at 20% 30%, rgba(200, 140, 70, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 75% 70%, rgba(170, 110, 50, 0.35) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 50%, #8c5e32 0%, #6a4421 50%, #4a2e12 85%, #2e1a07 100%);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.45), inset 0 -40px 80px rgba(200, 130, 50, 0.12);
+}
+
+/* Afternoon soil — sunlit, vivid, highest contrast */
+.soilAfternoon {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 210, 100, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 25% 35%, rgba(220, 165, 85, 0.3) 0%, transparent 45%),
+    radial-gradient(circle at 70% 65%, rgba(190, 130, 60, 0.35) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, #a06a38 0%, #7d5028 50%, #58361a 85%, #3a2210 100%);
+  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.3), inset 0 -30px 70px rgba(220, 160, 60, 0.15);
+}
+
+/* Qadr soil — midnight deep earth with golden-emerald rim */
+.soilQadr {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(80, 200, 120, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 20% 20%, rgba(120, 90, 40, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(100, 70, 30, 0.35) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 50%, #5a3c1e 0%, #3e2810 50%, #271808 85%, #160d03 100%);
+  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.78), inset 0 0 60px rgba(80, 200, 120, 0.06);
+}
+
 
 .canvasContainer {
   flex: 1;
