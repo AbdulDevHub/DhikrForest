@@ -19,7 +19,8 @@ src/
 ├── lib/                    pure logic: forestSegments, secureStore, plantGuard, qadr (Hijri via Intl umalqura + adhan), share
 ├── firebase/cloud.ts       ALL Firebase calls (dynamic import only)
 ├── components/
-│   ├── Forest/             ForestCanvas (single canvas, cached pine sprites in treeSprites.ts), Pagination, Flash
+│   ├── Forest/             ForestCanvas (scene canvas + fx canvas), forestArt.ts (16 tree sprites + Qadr light tree, graded per mode),
+│   │                       forestScene.ts (perspective layout, river, palace, sky/ground backdrop cache), forestFx.ts (particles), Pagination
 │   ├── Panel/              Counter, ZikrBlock/Nav, PlantButton, StatsRow, MilestonePane, QadrToggle, sky (Stars/Moon/Sun)
 │   ├── Toolbar/            bottom bar + Settings / Account modals
 │   ├── Leaderboard/        weekly / all-time board, rank, community total (60 s cache)
@@ -28,19 +29,21 @@ src/
 ```
 
 ## Local state (`SavedState`, key `dhikrforest_state_v3` + `_bak`)
-`{ v:3, segments:[{t:'standard'|'qadr', n}], daily:{day,count}, streak:{count,lastGoalDay}, goal, qadr:{hijriYear,activatedAt,expiresAt}|null, pending:{uid,amount}|null, haptics, coords }`
+`{ v:3, segments:[{t:'standard'|'qadr', n}], daily:{day,count}, streak:{count,lastGoalDay}, goal, qadr:{hijriYear,activatedAt,expiresAt}|null, pending:{[uid]:trees}, resetAt, haptics, coords }`
 Saved as `{ d: state, s: keyedHash(secret|deviceId|json) }`. Bad signature → restore backup → else fresh state + toast. Legacy keys (`zikr_tree_items_v2`, `zikr_tree_count`, `zikr_trees`) migrate once, only on a device with no device id yet.
 
 ## Forest model
-- 1,000 slots per page (50 × 20). A Qadr tree is 1 slot worth 1,000 (`QADR_MULTIPLIER`).
-- Each tree's sprite, size and jitter are seeded by its global index (`utils/prng.ts`), so pages look stable.
-- Canvas redraws only on items change / resize / grow animation.
+- 1,000 slots per page ("garden"), 50 per row × 20 rows. A Qadr tree is 1 slot worth 1,000 (`QADR_MULTIPLIER`).
+- Perspective ground plane: z = 1 (front) … ~5.2 (back), `screenY = horizon + (frontY − horizon)/z`. Planting fills the front row first, riverbanks outward.
+- Each page has its own river path and palace position (seeded by page); species/variant are seeded by the tree's global index.
+- Backdrop (sky + graded ground + groves + river) is cached per size/mode/page; sprites are cached per mode. The scene canvas redraws only on change, resize or a grow animation.
+- The fx canvas runs ambient particles at ~30 fps, paused when offscreen/hidden or with reduced motion.
 
 ## Firestore schema (`firestore.rules`)
 - `users/{uid}` (public read, owner write): `nickname, total, weekTotal, weekIndex, lastSync, createdAt, qadrActivatedAt, qadrExpiresAt`.
   - Sync update: ≥5 s since `lastSync` (server time), `0 < delta ≤ min(elapsed·16+16, 5000) × (1000 if within 24 h of qadrExpiresAt)`, `weekIndex = floor((ms+3d)/7d)` (Monday UTC), weekTotal consistent.
   - Qadr activation: only those two fields, ≥300 days since the last, ≤14 h long. Rename: nickname only. Delete: never.
-- `users/{uid}/private/forest` (owner only): `segments, goal, streak, daily, updatedAt`. Merge on sign-in: bigger forest wins.
+- `users/{uid}/private/forest` (owner only): `segments, goal, streak, daily, resetAt, updatedAt`. Merge on sign-in: newer reset wins, otherwise the bigger forest wins.
 - Index: `weekIndex ASC + weekTotal DESC/ASC` (weekly board + rank count).
 - Leaderboard only counts trees planted while signed in with a nickname (`syncUid`).
 

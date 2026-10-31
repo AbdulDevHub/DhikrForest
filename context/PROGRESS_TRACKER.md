@@ -5,7 +5,7 @@
 > Collapse stale log entries into "Earlier history" instead of deleting them.
 
 ## Current state
-- Offline PWA dhikr counter with canvas pine forest (1,000 trees/page), sky themes, milestones, daily goal + streak, haptics, share.
+- Offline PWA dhikr counter with an illustrated canvas garden (1,000 trees/page), sky themes, milestones, daily goal + streak, haptics, share.
 - Anti-cheat: plant guard (key repeat, untrusted events, 250 ms gap), signed local storage with restore, Firestore rules validating every leaderboard sync (12 emulator tests pass).
 - Laylatul Qadr: last 10 nights of Ramadan, once per Hijri year, ends at Fajr (geolocation + adhan, 05:00 fallback), synced across devices when signed in.
 - Firebase project `dhikrforest`: Google sign-in enabled; authorized domains include `dhikrforest.netlify.app` and `localhost`; rules + indexes deployed.
@@ -16,11 +16,15 @@
 - Real sign-in end-to-end test (needs the owner's Google login): create nickname → plant → sync appears on board.
 
 ## Next steps
-- GitHub repo: description, topics, homepage, social preview image (owner approval / manual upload).
+- GitHub social preview image (manual upload of `public/og-image.png`).
 - Google Search Console verification + sitemap submit (owner).
 - Optional: App Check (reCAPTCHA v3) for bot protection; translations (Arabic/Urdu/Indonesian); Lighthouse pass.
 
 ## Session log
+### 2026-10-31
+- Replaced the pine grid with an illustrated garden: perspective meadow, river from a palace, distant groves, 6 species (palm, broadleaf, blossom, fruit, cypress, fir) + glowing Qadr light trees, per-mode sky (clouds/sun, dawn, stars/moon, Qadr aurora), fx layer (fireflies, motes, petals, butterflies, river glints, Qadr orbs, plant burst). Pager is now a floating "Garden N of M" pill.
+- Pushed to main; GitHub description, homepage and topics set.
+
 ### 2026-10-30
 - Rewrote storage as signed RLE segments (migrates legacy keys); added plantGuard, Qadr rules, daily goal/streak, haptics, share.
 - Created Firebase project + web app, Google auth, Firestore rules/indexes with emulator tests (`pnpm test:rules`).

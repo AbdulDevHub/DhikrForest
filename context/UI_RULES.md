@@ -16,7 +16,7 @@
 - Animate only `opacity` / `transform`. Pulses are done with `::after` overlays fading opacity, never animated `box-shadow`/`filter`.
 - No `backdrop-filter`. Stars are 3 box-shadow layers (not per-star nodes).
 - Every infinite animation must be disabled under `prefers-reduced-motion`.
-- Forest drawing stays on the single canvas; don't add per-tree DOM.
+- Forest drawing stays on the scene canvas (static, redrawn on change) + fx canvas (particles). Don't add per-tree DOM or per-frame scene redraws.
 
 ## Accessibility
 - Real `<button>`s everywhere (`role="switch"` for Qadr, `role="tab"` for dhikr dots / board tabs).

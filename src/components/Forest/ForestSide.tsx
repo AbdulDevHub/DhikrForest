@@ -5,13 +5,6 @@ import Pagination from './Pagination';
 import Flash from './Flash';
 import styles from './Forest.module.css';
 
-const GROUND_CLASS: Record<EffectiveTimeOfDay, string> = {
-  morning:   'groundMorning',
-  afternoon: 'groundAfternoon',
-  night:     'groundNight',
-  qadr:      'groundQadr',
-};
-
 interface ForestSideProps {
   activePageItems: TreeType[];
   currentPage: number;
@@ -29,11 +22,17 @@ export default function ForestSide({
   flashKey,
   effectiveTimeMode,
 }: ForestSideProps) {
-  const groundCls = styles[GROUND_CLASS[effectiveTimeMode] as keyof typeof styles] ?? '';
   const isEmpty = totalPages === 1 && activePageItems.length === 0;
 
   return (
-    <main aria-label="Your forest in Jannah" className={`${styles.forestSide} ${groundCls}`}>
+    <main aria-label="Your garden in Jannah" className={styles.forestSide}>
+      <ForestCanvas
+        items={activePageItems}
+        startIndex={currentPage * TREES_PER_PAGE}
+        page={currentPage}
+        mode={effectiveTimeMode}
+      />
+
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
@@ -42,17 +41,13 @@ export default function ForestSide({
         maxTreesPerPage={TREES_PER_PAGE}
       />
 
-      <div className={styles.canvasContainer}>
-        <ForestCanvas items={activePageItems} startIndex={currentPage * TREES_PER_PAGE} />
-        {isEmpty && (
-          <p className={styles.emptyHint}>
-            Your forest is waiting 🌱
-            <span>Each dhikr plants a tree here, in shāʾ Allāh.</span>
-          </p>
-        )}
-      </div>
+      {isEmpty && (
+        <p className={styles.emptyHint}>
+          Your garden is waiting 🌱
+          <span>Each dhikr plants a tree beside the river, in shāʾ Allāh.</span>
+        </p>
+      )}
 
-      <div className={styles.skyTint} aria-hidden="true" />
       <Flash flashKey={flashKey} />
     </main>
   );

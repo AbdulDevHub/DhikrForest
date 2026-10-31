@@ -8,7 +8,7 @@
 
 **▶ Use it now: [dhikrforest.netlify.app](https://dhikrforest.netlify.app/)** (no sign-up, works on phone and desktop, installs as an app)
 
-![DhikrForest screenshot: a counter panel beside a dense forest of pine trees](Screenshot.png)
+![DhikrForest screenshot: a counter panel beside a moonlit garden of trees along a river flowing from a palace](Screenshot.png)
 
 ---
 
@@ -31,7 +31,7 @@ DhikrForest turns that promise into something you can see grow, one remembrance 
 | | Feature | Details |
 | --- | --- | --- |
 | 🌿 | **Two dhikrs** | *Subḥānallāhi wa biḥamdihī* (1 tree) and the four praises (4 trees) |
-| 🌲 | **Your forest** | Hand-drawn pine forest, 1,000 trees per page, rendered on canvas so it stays fast at any size |
+| 🌴 | **Your garden** | An illustrated garden of palms, blossom, fruit, cypress and fir trees along a river flowing from a palace on the horizon. Dawn, day and night lighting, fireflies and drifting light. 1,000 trees per garden, drawn on canvas so it stays fast |
 | 🎯 | **Daily goal & streaks** | Pick 33 / 100 / 300 / 1,000 a day and keep your streak alive |
 | 🏆 | **Leaderboard** | Optional Google sign-in with a public nickname. Weekly and all-time boards plus a community total |
 | 🌙 | **Laylatul Qadr mode** | ×1000 golden trees, once a year, only in the last ten nights of Ramadan, ending at Fajr (local prayer times) |
@@ -67,7 +67,7 @@ Firebase project: `dhikrforest` (Auth with Google, Firestore). Deploy rules with
 src/
 ├── App.tsx                 # Wiring: state, cloud sync, keyboard guard, modals
 ├── components/
-│   ├── Forest/             # Canvas pine forest, sprites, pagination
+│   ├── Forest/             # Canvas garden: forestArt (tree sprites), forestScene (sky, river, palace), forestFx (living layer)
 │   ├── Panel/              # Counter, dhikr, plant button, stats, Qadr toggle
 │   ├── Toolbar/            # Bottom bar, settings and account dialogs
 │   ├── Leaderboard/        # Weekly / all-time leaderboard dialog

@@ -16,33 +16,35 @@ export default function Pagination({
   maxTreesPerPage,
 }: PaginationProps) {
   return (
-    <div className={styles.paginationBar}>
+    <nav className={styles.pager} aria-label="Gardens">
       <button
+        type="button"
         className={styles.pageBtn}
         disabled={currentPage === 0}
         onClick={() => onPageChange(currentPage - 1)}
-        title="Previous Page"
+        aria-label="Previous garden"
       >
-        ◀ Prev
+        ‹
       </button>
 
       <div className={styles.pageInfo}>
         <span className={styles.pageTitle}>
-          Page {currentPage + 1} of {totalPages}
+          Garden {currentPage + 1} <span className={styles.pageOf}>of {totalPages}</span>
         </span>
         <span className={styles.treeCapacity}>
-          ({treesOnCurrentPage.toLocaleString()} / {maxTreesPerPage.toLocaleString()} trees)
+          {treesOnCurrentPage.toLocaleString()} / {maxTreesPerPage.toLocaleString()} trees
         </span>
       </div>
 
       <button
+        type="button"
         className={styles.pageBtn}
         disabled={currentPage >= totalPages - 1}
         onClick={() => onPageChange(currentPage + 1)}
-        title="Next Page"
+        aria-label="Next garden"
       >
-        Next ▶
+        ›
       </button>
-    </div>
+    </nav>
   );
 }

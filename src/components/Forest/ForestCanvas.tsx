@@ -1,182 +1,236 @@
-import { useEffect, useRef, useState } from 'react';
-import type { TreeType } from '../../types';
-import { GRID_COLS, GRID_ROWS } from '../../utils/constants';
-import { pr } from '../../utils/prng';
-import { SPRITE_BASE_PAD, SPRITE_H, SPRITE_W, getTreeSprites, makeGrassPattern } from './treeSprites';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { EffectiveTimeOfDay, TreeType } from '../../types';
+import { SPRITE_BASE, SPRITE_H, SPRITE_W, getSprites, glow, spriteFor } from './forestArt';
+import { HAZE, getBackdrop, layoutPage, makeGeom, riverFor } from './forestScene';
+import type { Geom, Slot } from './forestScene';
+import { ForestFx } from './forestFx';
 import styles from './Forest.module.css';
 
 interface ForestCanvasProps {
   items: TreeType[];
   /** Index of the first item in the whole forest, so every tree keeps its look across pages. */
   startIndex: number;
+  page: number;
+  mode: EffectiveTimeOfDay;
 }
 
-const GROW_MS = 480;
+const GROW_MS = 520;
+const SHADOW: Record<EffectiveTimeOfDay, string> = {
+  morning: 'rgba(60, 30, 40, 0.22)',
+  afternoon: 'rgba(10, 50, 20, 0.26)',
+  night: 'rgba(0, 0, 10, 0.32)',
+  qadr: 'rgba(0, 0, 10, 0.32)',
+};
 
-interface Placed {
-  x: number;
-  y: number;
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+interface Size {
   w: number;
   h: number;
+  dpr: number;
 }
 
-/** Where tree `i` of a page sits: rows of pines, back to front, with seeded jitter. */
-function layout(i: number, globalIdx: number, width: number, height: number): Placed {
-  const col = i % GRID_COLS;
-  const row = Math.floor(i / GRID_COLS);
-  const cellW = width / GRID_COLS;
-  const baseTreeW = cellW * 1.9;
-  const treeH = Math.min((baseTreeW * SPRITE_H) / SPRITE_W, height * 0.3);
-  const treeW = (treeH * SPRITE_W) / SPRITE_H;
-  const rowH = (height - treeH) / (GRID_ROWS - 0.6);
-
-  const s = globalIdx * 7 + 11;
-  const scale = 0.84 + pr(s) * 0.3;
-  const w = treeW * scale;
-  const h = treeH * scale;
-  const cx = (col + 0.5 + (pr(s + 1) - 0.5) * 0.5 + (row % 2) * 0.25) * cellW;
-  const baseY = treeH + row * rowH + (pr(s + 2) - 0.5) * rowH * 0.35;
-  return { x: cx - w / 2, y: baseY - h + (h * SPRITE_BASE_PAD) / SPRITE_H, w, h };
-}
-
-export default function ForestCanvas({ items, startIndex }: ForestCanvasProps) {
+export default function ForestCanvas({ items, startIndex, page, mode }: ForestCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const sceneRef = useRef<HTMLCanvasElement>(null);
+  const fxRef = useRef<HTMLCanvasElement>(null);
+  const fx = useRef<ForestFx | null>(null);
   const prevRef = useRef({ start: startIndex, count: items.length });
-  const growStartRef = useRef<Map<number, number>>(new Map());
-  const placedRef = useRef<Placed[]>([]);
+  const growStart = useRef<Map<number, number>>(new Map());
+  const [size, setSize] = useState<Size | null>(null);
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; text: string } | null>(null);
 
-  const [hoverTooltip, setHoverTooltip] = useState<{ x: number; y: number } | null>(null);
+  const rv = useMemo(() => riverFor(page), [page]);
+  const geom: Geom | null = useMemo(() => (size ? makeGeom(size.w, size.h) : null), [size]);
+  const slots: Slot[] = useMemo(() => (geom ? layoutPage(geom, rv, page) : []), [geom, rv, page]);
+  // Back to front, so nearer trees overlap farther ones.
+  const order = useMemo(() => slots.map((_, i) => i).sort((a, b) => slots[b].z - slots[a].z), [slots]);
 
-  // Track newly planted trees on the same page for the grow animation.
+  // Track the canvas size
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const measure = () => {
+      const rect = el.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      const next = { w: Math.round(rect.width), h: Math.round(rect.height), dpr: Math.min(window.devicePixelRatio || 1, 2) };
+      setSize((prev) => (prev && prev.w === next.w && prev.h === next.h && prev.dpr === next.dpr ? prev : next));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Ambient life layer: runs only while visible and motion is welcome.
+  useEffect(() => {
+    const canvas = fxRef.current;
+    const el = containerRef.current;
+    if (!canvas || !el) return;
+    const engine = new ForestFx(canvas);
+    fx.current = engine;
+    let visible = true;
+    const sync = () => {
+      if (visible && document.visibilityState === 'visible' && !reducedMotion()) engine.start();
+      else engine.stop();
+    };
+    const io = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      sync();
+    });
+    io.observe(el);
+    document.addEventListener('visibilitychange', sync);
+    sync();
+    return () => {
+      engine.stop();
+      io.disconnect();
+      document.removeEventListener('visibilitychange', sync);
+      fx.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (size && geom) fx.current?.setScene(geom, size.dpr, mode, rv);
+  }, [size, geom, mode, rv]);
+
+  // Newly planted trees on this page grow in, with a burst of light.
   useEffect(() => {
     const prev = prevRef.current;
     const now = performance.now();
     if (prev.start === startIndex && items.length > prev.count) {
-      for (let i = prev.count; i < items.length; i++) growStartRef.current.set(i, now);
+      for (let i = prev.count; i < items.length; i++) {
+        if (!reducedMotion()) growStart.current.set(i, now);
+        const s = slots[i];
+        if (s) fx.current?.burst(s.x, s.y, s.size, items[i] === 'qadr');
+      }
     } else if (prev.start !== startIndex || items.length < prev.count) {
-      growStartRef.current.clear();
+      growStart.current.clear();
     }
     prevRef.current = { start: startIndex, count: items.length };
-  }, [items, startIndex]);
+  }, [items, startIndex, slots]);
 
+  // Scene: cached backdrop + shadows + trees + haze + Qadr halos
   useEffect(() => {
-    const container = containerRef.current;
-    const canvas = canvasRef.current;
-    if (!container || !canvas) return;
-    const sprites = getTreeSprites();
-    let pattern: CanvasPattern | null = null;
+    const canvas = sceneRef.current;
+    if (!canvas || !size || !geom) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const { dpr } = size;
+    const pw = Math.round(geom.w * dpr);
+    const ph = Math.round(geom.h * dpr);
+    if (canvas.width !== pw || canvas.height !== ph) {
+      canvas.width = pw;
+      canvas.height = ph;
+    }
+    const backdrop = getBackdrop(geom, dpr, mode, page, rv);
+    const sprites = getSprites(mode);
+    const haze = HAZE[mode];
+    const night = mode === 'night' || mode === 'qadr';
     let frame = 0;
 
     const render = () => {
       frame = 0;
-      const rect = container.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const width = rect.width;
-      const height = rect.height;
-      const pxW = Math.round(width * dpr);
-      const pxH = Math.round(height * dpr);
-      if (canvas.width !== pxW || canvas.height !== pxH) {
-        canvas.width = pxW;
-        canvas.height = pxH;
-      }
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, width, height);
-      pattern ??= makeGrassPattern(ctx);
-      if (pattern) {
-        ctx.fillStyle = pattern;
-        ctx.fillRect(0, 0, width, height);
-      }
-
       const now = performance.now();
       let animating = false;
-      const placed: Placed[] = new Array(items.length);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.drawImage(backdrop, 0, 0);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      for (let i = 0; i < items.length; i++) {
-        const globalIdx = startIndex + i;
-        const p = layout(i, globalIdx, width, height);
-        placed[i] = p;
-        const pool = items[i] === 'qadr' ? sprites.qadr : sprites.standard;
-        const sprite = pool[Math.floor(pr(globalIdx * 13 + 5) * pool.length)];
-
-        const started = growStartRef.current.get(i);
-        if (started === undefined) {
-          ctx.drawImage(sprite, p.x, p.y, p.w, p.h);
-          continue;
-        }
-        const t = (now - started) / GROW_MS;
-        if (t >= 1) {
-          growStartRef.current.delete(i);
-          ctx.drawImage(sprite, p.x, p.y, p.w, p.h);
-          continue;
-        }
-        animating = true;
-        // Springy grow from the trunk base: overshoots slightly, then settles.
-        const sy = Math.max(0, 1 - Math.pow(1 - t, 3) * Math.cos(t * Math.PI * 1.5));
-        const sx = 0.5 + 0.5 * Math.min(1, t * 1.6);
-        const w = p.w * sx;
-        const h = p.h * sy;
-        ctx.drawImage(sprite, p.x + (p.w - w) / 2, p.y + p.h - h, w, h);
+      ctx.fillStyle = SHADOW[mode];
+      ctx.beginPath();
+      for (const i of order) {
+        if (i >= items.length) continue;
+        const s = slots[i];
+        const rx = s.size * 0.3;
+        ctx.moveTo(s.x + rx * 1.25, s.y);
+        ctx.ellipse(s.x + rx * 0.25, s.y, rx, rx * 0.26, 0, 0, Math.PI * 2);
       }
-      placedRef.current = placed;
+      ctx.fill();
+
+      for (const i of order) {
+        if (i >= items.length) continue;
+        const s = slots[i];
+        const sprite = spriteFor(sprites, items[i], startIndex + i);
+        let h = s.size;
+        let w = (h * SPRITE_W) / SPRITE_H;
+        const started = growStart.current.get(i);
+        if (started !== undefined) {
+          const t = (now - started) / GROW_MS;
+          if (t >= 1) growStart.current.delete(i);
+          else {
+            animating = true;
+            h *= Math.max(0, 1 - Math.pow(1 - t, 3) * Math.cos(t * Math.PI * 1.5));
+            w *= 0.4 + 0.6 * Math.min(1, t * 1.8);
+          }
+        }
+        if (h <= 0.5) continue;
+        ctx.drawImage(sprite, s.x - w / 2, s.y - (h * SPRITE_BASE) / SPRITE_H, w, h);
+      }
+
+      // Aerial perspective: distant ground and trees fade into the sky colour
+      const haze0 = geom.horizon - 2;
+      const haze1 = geom.horizon + (geom.frontY - geom.horizon) * 0.3;
+      const hg = ctx.createLinearGradient(0, haze0, 0, haze1);
+      hg.addColorStop(0, `rgba(${haze[0]}, ${haze[1]}, ${haze[2]}, 0.42)`);
+      hg.addColorStop(1, `rgba(${haze[0]}, ${haze[1]}, ${haze[2]}, 0)`);
+      ctx.fillStyle = hg;
+      ctx.fillRect(0, haze0, geom.w, haze1 - haze0);
+
+      // Laylatul Qadr trees glow, more so at night
+      ctx.globalCompositeOperation = 'lighter';
+      const halo = glow(255, 214, 120);
+      ctx.globalAlpha = night ? 0.42 : 0.28;
+      for (const i of order) {
+        if (i >= items.length || items[i] !== 'qadr') continue;
+        const s = slots[i];
+        const r = s.size * 0.6;
+        ctx.drawImage(halo, s.x - r, s.y - s.size * 0.62 - r, r * 2, r * 2);
+      }
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
 
       if (animating) frame = requestAnimationFrame(render);
     };
 
     render();
-    const resizeObserver = new ResizeObserver(() => {
-      if (!frame) frame = requestAnimationFrame(render);
-    });
-    resizeObserver.observe(container);
-
     return () => {
-      resizeObserver.disconnect();
       if (frame) cancelAnimationFrame(frame);
     };
-  }, [items, startIndex]);
+  }, [items, startIndex, page, mode, size, geom, rv, slots, order]);
 
-  // Hover detection for Qadr trees (front-most tree wins)
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    const placed = placedRef.current;
-    for (let i = placed.length - 1; i >= 0; i--) {
-      const p = placed[i];
-      if (x >= p.x + p.w * 0.2 && x <= p.x + p.w * 0.8 && y >= p.y + p.h * 0.1 && y <= p.y + p.h) {
-        if (items[i] === 'qadr') {
-          setHoverTooltip({ x: p.x + p.w / 2, y: p.y + p.h * 0.1 });
-          return;
-        }
-        break;
+    // Front-most tree under the pointer wins
+    for (let k = order.length - 1; k >= 0; k--) {
+      const i = order[k];
+      if (i >= items.length) continue;
+      const s = slots[i];
+      const w = (s.size * SPRITE_W) / SPRITE_H;
+      if (x >= s.x - w * 0.32 && x <= s.x + w * 0.32 && y >= s.y - s.size * 0.92 && y <= s.y) {
+        const n = (startIndex + i + 1).toLocaleString();
+        setTooltip({ x: s.x, y: s.y - s.size * 0.95, text: items[i] === 'qadr' ? `✨ Tree #${n} · ×1000` : `🌳 Tree #${n}` });
+        return;
       }
     }
-    setHoverTooltip(null);
+    setTooltip(null);
   };
 
   return (
     <div ref={containerRef} className={styles.canvasWrapper}>
       <canvas
-        ref={canvasRef}
+        ref={sceneRef}
         className={styles.canvasElement}
         onMouseMove={handleMouseMove}
-        onMouseLeave={() => setHoverTooltip(null)}
+        onMouseLeave={() => setTooltip(null)}
         role="img"
-        aria-label={`Forest page with ${items.length.toLocaleString()} trees`}
+        aria-label={`Garden ${page + 1}: ${items.length.toLocaleString()} trees beside a river`}
       />
-      {hoverTooltip && (
-        <div
-          className={styles.qadrTooltipCanvas}
-          style={{
-            left: `${hoverTooltip.x}px`,
-            top: `${hoverTooltip.y - 8}px`,
-          }}
-        >
-          ×1000
+      <canvas ref={fxRef} className={styles.fxCanvas} aria-hidden="true" />
+      {tooltip && (
+        <div className={styles.treeTooltip} style={{ left: `${tooltip.x}px`, top: `${tooltip.y}px` }}>
+          {tooltip.text}
         </div>
       )}
     </div>
