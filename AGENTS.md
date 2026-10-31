@@ -1,61 +1,38 @@
-# DhikrForest — AI Developer Context & Architecture Guide
+# AGENTS.md: DhikrForest
+
+> Context for AI coding agents working in this repo. Read it first, then the files it points to.
+> **Maintenance:** after any meaningful change to this project, update this file, `context/PROGRESS_TRACKER.md`,
+> and the "Project Overview" section of `README.md` to reflect the current state. Do this proactively, without being asked.
 
 ## Overview
-**DhikrForest** is a web application designed as an offline-first dhikr counter. It visualizes daily remembrance (dhikr) as a growing forest.
+Offline-first dhikr counter (digital tasbih) PWA. Each dhikr plants a tree in a canvas-drawn forest; optional Google sign-in feeds an anti-cheat-validated leaderboard. Live: https://dhikrforest.netlify.app/ (Netlify builds `main`).
 
-## Tech Stack
-- **Framework / Bundler**: React 18 + TypeScript + Vite
-- **Styling**: CSS Modules (`*.module.css`) + Vanilla CSS variables (`src/index.css`)
-- **Icons & Fonts**: Google Fonts (Amiri, Tajawal) loaded in `index.html`
-- **State Management**: Custom React hooks (`useForestState`, `useStoredNumber`) backed by browser `localStorage`
+## Tech stack
+React 19 + TypeScript 6 + Vite 8 (rolldown), CSS Modules + tokens in `src/index.css`, Firebase 13 (Auth Google + Firestore, project `dhikrforest`, lazy-loaded), `adhan` (prayer times), `vite-plugin-pwa` (Workbox generateSW), `@fontsource` (self-hosted Amiri/Tajawal), oxlint.
 
-## Project Structure
-```
-DhikrForest/
-├── index.html               # Main HTML entry point & font loading
-├── public/                  # Static assets (favicons, icons)
-├── AGENTS.md                # Project architecture & context guide for AI assistants
-├── src/
-│   ├── main.tsx             # React DOM root render
-│   ├── App.tsx              # Root component connecting state to UI
-│   ├── index.css            # Design tokens, variables, global reset
-│   ├── components/
-│   │   ├── Forest/          # Dirt background canvas, pagination, top-view tree grid
-│   │   │   ├── ForestSide.tsx    # Canvas wrapper & layout manager
-│   │   │   ├── ForestCanvas.tsx  # Grid container rendering page items
-│   │   │   ├── Pagination.tsx    # Page prev/next and indicator controls
-│   │   │   ├── Tree.tsx          # Top-view standard tree & special Qadr tree component
-│   │   │   ├── Flash.tsx         # Planting flash visual effect
-│   │   │   └── Forest.module.css # Dirt ground styling & grid layouts
-│   │   ├── Panel/           # Left control drawer & counter stats
-│   │   │   ├── Panel.tsx         # Side panel assembly
-│   │   │   ├── Counter.tsx       # Total tree counter display
-│   │   │   ├── ZikrBlock.tsx     # Current Arabic zikr text & transliteration
-│   │   │   ├── PlantButton.tsx   # Primary dhikr plant button
-│   │   │   ├── HadithPanel.tsx   # Hadith popover modal ("About these Zikrs")
-│   │   │   ├── QadrToggle.tsx    # Laylatul Qadr mode toggle button
-│   │   │   └── Panel.module.css  # Drawer styles & popover layout
-│   │   ├── Leaves/          # Floating particle animation component
-│   │   └── Toast/           # Toast notification banner
-│   ├── data/
-│   │   └── zikrs.ts         # Zikr definitions, multipliers, and milestones
-│   ├── hooks/
-│   │   ├── useForestState.ts   # Core application state & storage persistence
-│   │   └── useStoredNumber.ts # LocalStorage sync helper
-│   ├── types/
-│   │   └── index.ts         # TypeScript interfaces & types
-│   └── utils/
-│       ├── constants.ts     # Configuration constants (TREES_PER_PAGE=1000, keys)
-│       └── geometry.ts      # Grid layout helpers
-```
+## Commands
+- Install: `pnpm install` (pnpm 12; build scripts for `@firebase/util`, `protobufjs`, `re2` are deliberately denied in `pnpm-workspace.yaml`)
+- Dev: `pnpm dev` (append `?now=2027-03-01T21:00` to fake the clock, dev builds only)
+- Build: `pnpm build` · Lint: `pnpm lint`
+- Rules tests: `pnpm test:rules` (needs Java 21+ on PATH for the Firestore emulator)
+- Deploy rules/indexes: `npx firebase deploy --only firestore`
+- Regenerate PNG icons from `public/favicon.svg`: `pnpm exec pwa-assets-generator`
 
-## Key Concepts & Conventions
-1. **Tree Types & Pagination**:
-   - Each page holds up to **1,000 tree items** arranged in a uniform top-down grid.
-   - Standard zikrs add standard trees (1 tree for SubhanAllah wa bihamdihi, 4 trees for 4-word zikr).
-   - In **Laylatul Qadr mode**, 1 click plants 1 or 4 **special golden-emerald trees** (`type: 'qadr'`). Each special tree represents **1,000 trees** in value towards the counter, but occupies **1 slot** on the page grid. Hovering over special trees shows `x1000`.
-2. **Hadith Popover**:
-   - Fixed modal positioned independently to avoid container `overflow: hidden` clipping.
-3. **Styling Rules**:
-   - Use CSS Modules for component-specific styles (`styles.className`).
-   - Use global tokens defined in `src/index.css` for palette consistency.
+Verify: pnpm build && pnpm lint
+
+## Conventions & constraints
+- Never store or read app state with raw `localStorage`: go through `useSavedState` / `lib/secureStore.ts` (signed blob). Forest is run-length `ForestSegment[]`; totals are derived, never stored.
+- Every plant must pass `lib/plantGuard.ts` (no key repeat, `isTrusted`, 250 ms gap). Don't add other planting paths.
+- `firebase/cloud.ts` is only reached through `loadCloud()` (dynamic import). Don't import Firebase statically.
+- Firestore writes must satisfy `firestore.rules`; if you change one, change the other, mirror client helpers (`weekIndexOf`, `allowance`) and add a test in `tests/`.
+- Qadr rules (last 10 nights, once per Hijri year, ends at Fajr) live in `lib/qadr.ts`; server mirrors them loosely (300 days, 14 h).
+- Modals use `components/Modal/Modal.tsx` (portal). Use CSS Modules + tokens; animate only `opacity`/`transform` (no infinite box-shadow/filter animations).
+- Hadith citations must be accurate with collection + number; don't invent wording.
+
+## Boundaries
+- `src/firebase/config.ts` holds the public web config (not secret). Don't add service-account keys anywhere.
+- Don't delete the `users/{uid}` docs or loosen `allow delete: if false` (it would let users reset their Qadr night).
+- `public/og-image.png`, `public/screenshots/`, `Screenshot.png` are generated from the running app with Playwright.
+
+## More
+`README.md` (plain overview, features, anti-cheat summary) · `context/PROGRESS_TRACKER.md` (state + log) · `context/ARCHITECTURE.md` (data flow, Firestore schema) · `context/UI_RULES.md` (layout, tokens, a11y).

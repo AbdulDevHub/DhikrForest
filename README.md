@@ -1,127 +1,97 @@
-# 🌳 Zikr - Plant Trees in Jannah
+# 🌳 DhikrForest: Dhikr Counter & Digital Tasbih That Plants Trees in Jannah
 
-> A beautiful, offline-first dhikr (remembrance) counter that visualises your worship as a growing forest in Jannah.
+[![Live app](https://img.shields.io/badge/open-dhikrforest.netlify.app-22a34a?style=flat-square)](https://dhikrforest.netlify.app/)
+[![PWA](https://img.shields.io/badge/PWA-installable%20%26%20offline-5a0fc8?style=flat-square)](https://dhikrforest.netlify.app/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-f5c842?style=flat-square)](LICENSE)
 
-![Zikr App Screenshot](Screenshot.png)
+**DhikrForest** is a free, offline-first **dhikr counter** (digital tasbih / tasbeeh counter) for Muslims. Every time you say *Subḥānallāhi wa biḥamdihī* and tap, a tree is planted in your personal forest, a living picture of the trees promised in Jannah.
 
----
+**▶ Use it now: [dhikrforest.netlify.app](https://dhikrforest.netlify.app/)** (no sign-up, works on phone and desktop, installs as an app)
 
-## ✨ What is this?
-
-Every time you recite a dhikr, a tree is planted in your personal Jannah forest. The app is built around a well-known hadith:
-
-> *"Whoever says 'Subḥānallāhi wa biḥamdihī' one hundred times a day, his sins will be forgiven even if they were as much as the foam of the sea."*
->
-> - Ṣaḥīḥ al-Bukhārī & Muslim
-
-The forest grows row by row, tree by tree - a living, visual record of your remembrance of Allah.
+![DhikrForest screenshot: a counter panel beside a dense forest of pine trees](Screenshot.png)
 
 ---
+
+## 🧭 Project Overview
+
+DhikrForest is a counter for remembrance of Allah that you can see. Each tap is one dhikr, and each dhikr plants a tree in a forest that keeps growing page after page. It runs entirely in the browser and keeps working with no internet connection, so it can be used anywhere, like a tasbih in your pocket. If you choose to sign in, your trees also count toward a shared leaderboard. The server checks every update so nobody can fake a score. The app is free and open source, made as an ongoing charity (sadaqah jariyah).
+
+## ✨ Why
+
+> The Prophet ﷺ said: *"Whoever says Subḥānallāhil-ʿAẓīm wa biḥamdihī, a palm tree is planted for him in Paradise."*
+> Jāmiʿ at-Tirmidhī 3464
+
+> He ﷺ passed by Abū Hurayrah while he was planting and said: *"Shall I not guide you to plants better than this? Say SubḥānAllāh, wal-ḥamdu lillāh, wa lā ilāha illallāh, wallāhu akbar. For each one, a tree will be planted for you in Paradise."*
+> Sunan Ibn Mājah 3807
+
+DhikrForest turns that promise into something you can see grow, one remembrance at a time. It is built as a **sadaqah jariyah**: free forever, open source, no ads.
 
 ## 🖥️ Features
 
-| Feature | Description |
-| --- | --- |
-| 🌿 **Two dhikrs** | Switch between *Subḥānallāhi wa biḥamdihī* (1 tree) and the four-phrase dhikr (4 trees) |
-| 🌙 **Laylatul Qadr mode** | Toggle to multiply every deed ×1000, reflecting the night worth a thousand months |
-| 🌳 **Growing forest** | Up to 1,500 trees rendered live in a scrollable Jannah landscape |
-| 🎉 **Milestones** | Toast notifications at 10, 25, 50, 100 … 1,000,000,000,000 trees |
-| 💾 **Persistent storage** | Your tree count survives page reloads via `localStorage` |
-| ⌨️ **Keyboard support** | Press `Enter` or `Space` to plant - no mouse needed |
-| 📖 **Hadith panel** | Tap *"About these Zikrs"* to read the source hadith for each dhikr |
-| 🔄 **Reset** | Clear all data and start fresh at any time |
+| | Feature | Details |
+| --- | --- | --- |
+| 🌿 | **Two dhikrs** | *Subḥānallāhi wa biḥamdihī* (1 tree) and the four praises (4 trees) |
+| 🌲 | **Your forest** | Hand-drawn pine forest, 1,000 trees per page, rendered on canvas so it stays fast at any size |
+| 🎯 | **Daily goal & streaks** | Pick 33 / 100 / 300 / 1,000 a day and keep your streak alive |
+| 🏆 | **Leaderboard** | Optional Google sign-in with a public nickname. Weekly and all-time boards plus a community total |
+| 🌙 | **Laylatul Qadr mode** | ×1000 golden trees, once a year, only in the last ten nights of Ramadan, ending at Fajr (local prayer times) |
+| 📲 | **Installable PWA** | Add to your home screen. Works fully offline |
+| 🛡️ | **Fair counting** | Holding a key or scripting clicks doesn't plant extra trees. Saved data is tamper-checked, and leaderboard totals are validated server-side |
+| 📳 | **Haptics** | A gentle vibration per tap on phones, so you can count without looking |
+| 🌅 | **Sky themes** | Dawn, day and night skies follow your clock (or pick one) |
+| 📖 | **Hadith references** | The sources behind each dhikr, inside the app |
 
----
+## 🛡️ How the anti-cheat works
 
-## 🚀 Getting Started
+- **Input:** auto-repeat keys are ignored (holding Enter/Space plants once), untrusted script events are dropped, and taps are capped at a human pace.
+- **Local data:** the forest is stored as a signed blob. Edits made in DevTools are detected on reload, and the last verified copy is restored.
+- **Leaderboard:** [`firestore.rules`](firestore.rules) only accepts increments a human could make since the last sync (server clock), at most 5,000 per write. Laylatul Qadr can be switched on once per 300 days for at most 14 hours. Trees planted before signing in never count.
 
-Requires [pnpm](https://pnpm.io/).
+## 🚀 Development
+
+Requires Node 22+ and [pnpm](https://pnpm.io/).
 
 ```bash
 pnpm install
-pnpm dev       # start the dev server
-pnpm build     # production build → dist/
-pnpm preview   # preview the production build locally
+pnpm dev          # dev server (add ?now=2027-03-01T21:00 to simulate a Ramadan night)
+pnpm build        # type-check + production build with service worker → dist/
+pnpm lint         # oxlint
+pnpm test:rules   # Firestore security-rule tests (needs Java 21+ for the emulator)
 ```
 
----
+Firebase project: `dhikrforest` (Auth with Google, Firestore). Deploy rules with `npx firebase deploy --only firestore`.
 
-## 📁 Project Structure
+## 📁 Project structure
 
 ```
-zikr/
-├── index.html
-├── src/
-│   ├── main.tsx                  # React entry point
-│   ├── App.tsx                   # Top-level composition + keyboard handling
-│   ├── index.css                 # Reset, CSS variables, page layout
-│   ├── types/                    # Shared TS types
-│   ├── data/zikrs.ts             # ZIKRS + MILESTONES content
-│   ├── utils/                    # Geometry, PRNG, tree-shape, constants
-│   ├── hooks/
-│   │   ├── useForestState.ts     # Core app state: plant/reset, toasts, leaves, glow
-│   │   └── useStoredNumber.ts    # localStorage-backed number state
-│   └── components/
-│       ├── Panel/                # Left night-sky sidebar (counter, dhikr, controls)
-│       ├── Forest/                # Right-side scrollable tree canvas
-│       ├── Toast/                # Milestone / welcome-back toast
-│       └── Leaves/               # Flying leaf particles on each plant
-└── package.json
+src/
+├── App.tsx                 # Wiring: state, cloud sync, keyboard guard, modals
+├── components/
+│   ├── Forest/             # Canvas pine forest, sprites, pagination
+│   ├── Panel/              # Counter, dhikr, plant button, stats, Qadr toggle
+│   ├── Toolbar/            # Bottom bar, settings and account dialogs
+│   ├── Leaderboard/        # Weekly / all-time leaderboard dialog
+│   └── Modal/              # Shared dialog
+├── firebase/               # Lazy-loaded Firebase (auth, sync, leaderboard)
+├── hooks/                  # useForestState, useSavedState, useQadr, useCloud, useCloudSync…
+├── lib/                    # forestSegments, secureStore, plantGuard, qadr, share
+└── data/zikrs.ts           # Dhikr text and milestones
+firestore.rules             # Server-side anti-cheat
+tests/                      # Rules tests
 ```
 
----
+## 🤝 Contributing
 
-## 🕌 The Dhikrs
-
-### 1 - Subḥānallāhi wa biḥamdihī · 🌿 1 tree per click
-
-**سُبْحَانَ اللَّهِ وَبِحَمْدِهِ**
-
-*"Glory be to Allah and all praise is due to Him"*
-
-The Prophet ﷺ said: *"Two words light on the tongue, heavy on the Scale, beloved to the Most Merciful."*
-
-- Ṣaḥīḥ al-Bukhārī & Muslim
-
----
-
-### 2 - The Four Praises · 🌳 4 trees per click
-
-**سُبْحَانَ اللَّهِ وَالْحَمْدُ لِلَّهِ وَلَا إِلَٰهَ إِلَّا اللَّهُ وَاللَّهُ أَكْبَرُ**
-
-*"Glory be to Allah, praise to Allah, none worthy of worship but Allah, Allah is Greatest"*
-
-The Prophet ﷺ said: *"The most beloved words to Allah are four - it does not matter which you begin with."*
-
-- Ṣaḥīḥ Muslim
-
----
-
-## 🌙 Laylatul Qadr Mode
-
-Enabling the **Laylatul Qadr** toggle multiplies every click by **1,000**, reflecting the Quranic verse:
-
-> *"The Night of Decree is better than a thousand months."* - Al-Qadr 97:3
-
-Use this during the last ten nights of Ramadan, or as a reminder of the immense weight that sincerity carries.
-
----
-
-## 🛠️ Customisation
-
-- **`src/data/zikrs.ts`** - add, remove, or edit dhikr entries, and milestone thresholds/messages
-- **`src/utils/constants.ts`** - `COLS` (trees per row), `ROW_H` (row height), `VISUAL_CAP` (max trees rendered at once)
-
----
+Ideas, translations (Arabic, Urdu, Indonesian, Turkish, French…) and bug reports are very welcome. Open an issue or a pull request. If you share the app with someone, may you share in the reward of every dhikr it inspires.
 
 ## 🤲 Intention
 
-This tool is built as a gentle aid for the heart - not a replacement for sincerity, focus, or presence in worship. May every tree planted here be a witness on the Day of Judgement.
+This is a gentle aid for the heart, not a replacement for sincerity, focus or presence in worship. The count is a reminder; only Allah knows and rewards what is accepted.
 
-*"And your Lord is not forgetful."* - Maryam 19:64
+*"And your Lord is not forgetful."* (Maryam 19:64)
 
----
+## 📄 License
 
-## 📄 Licence
+[MIT](LICENSE): free to use, share and build upon.
 
-MIT - free to use, share, and build upon. If you improve it, consider sharing back.
+<sub>Keywords: dhikr counter, zikr counter, online tasbih, digital tasbeeh, tasbih counter app, SubhanAllah counter, Islamic app, Muslim app, Ramadan, Laylatul Qadr, trees in Jannah, sadaqah jariyah.</sub>
