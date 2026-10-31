@@ -11,10 +11,11 @@
   --gold: #f5c842;
   --mint: #7dd9b0;
   --text-main: #ede8d8;
-  --text-dim: #6a8090;
+  --text-dim: #8a9cad;
   --sky-top: #060011;
   --sky-mid: #0b1a3a;
   --sky-bot: #0e2544;
+  color-scheme: dark;
 }
 
 html,
@@ -26,15 +27,48 @@ body,
 }
 
 body {
-  font-family: 'Tajawal', sans-serif;
+  font-family: 'Tajawal', system-ui, sans-serif;
   color: var(--text-main);
   background: var(--sky-top);
+  -webkit-font-smoothing: antialiased;
 }
 
 #root {
   display: flex;
 }
 
-button {
+button,
+input {
   font-family: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Phones: forest on top, counter panel below, page scrolls */
+@media (max-width: 720px) {
+  html,
+  body,
+  #root {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+  #root {
+    flex-direction: column-reverse;
+  }
 }

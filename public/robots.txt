@@ -2,4 +2,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://dhikrforest.com/sitemap.xml
+Sitemap: https://dhikrforest.netlify.app/sitemap.xml

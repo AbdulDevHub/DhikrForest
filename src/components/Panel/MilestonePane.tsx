@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { MILESTONE_THRESHOLDS, MILESTONES } from '../../data/zikrs';
+import Modal from '../Modal/Modal';
 import styles from './Panel.module.css';
 
 interface MilestonePaneProps {
@@ -9,8 +10,6 @@ interface MilestonePaneProps {
 
 export default function MilestonePane({ totalTrees, onToast }: MilestonePaneProps) {
   const [modalOpen, setModalOpen] = useState(false);
-  const modalRef = useRef<HTMLDivElement>(null);
-  const btnRef = useRef<HTMLButtonElement>(null);
 
   // Find next target milestone
   const nextTarget = MILESTONE_THRESHOLDS.find((m) => m > totalTrees) ?? MILESTONE_THRESHOLDS[MILESTONE_THRESHOLDS.length - 1];
@@ -31,25 +30,6 @@ export default function MilestonePane({ totalTrees, onToast }: MilestonePaneProp
   const remaining = Math.max(0, nextTarget - totalTrees);
   const nextQuote = MILESTONES[nextTarget] || '';
 
-  // Close modal on click outside
-  useEffect(() => {
-    function onDocClick(e: MouseEvent) {
-      const target = e.target as Node;
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(target) &&
-        btnRef.current &&
-        !btnRef.current.contains(target)
-      ) {
-        setModalOpen(false);
-      }
-    }
-    if (modalOpen) {
-      document.addEventListener('click', onDocClick);
-    }
-    return () => document.removeEventListener('click', onDocClick);
-  }, [modalOpen]);
-
   const handleMilestoneClick = (threshold: number) => {
     if (onToast && MILESTONES[threshold]) {
       onToast(MILESTONES[threshold]);
@@ -65,7 +45,7 @@ export default function MilestonePane({ totalTrees, onToast }: MilestonePaneProp
             {allAchieved ? '👑 All Goals Reached!' : `🎯 Next Goal: ${nextTarget.toLocaleString()} Trees`}
           </span>
           <button
-            ref={btnRef}
+            type="button"
             className={styles.viewGoalsBtn}
             onClick={() => setModalOpen((o) => !o)}
             title="View all 17 Dhikr goals"
@@ -98,18 +78,7 @@ export default function MilestonePane({ totalTrees, onToast }: MilestonePaneProp
 
       {/* All Milestones Modal */}
       {modalOpen && (
-        <div className={styles.hadithBackdrop} onClick={() => setModalOpen(false)}>
-          <div
-            ref={modalRef}
-            className={`${styles.hadith} ${styles.hadithShow}`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className={styles.hadithHeader}>
-              <span>🎯 Dhikr Milestones &amp; Aspiring Goals</span>
-              <button className={styles.hadithClose} onClick={() => setModalOpen(false)}>
-                ✕
-              </button>
-            </div>
+        <Modal title="🎯 Dhikr Milestones & Aspiring Goals" onClose={() => setModalOpen(false)}>
 
             <div className={styles.milestoneList}>
               {MILESTONE_THRESHOLDS.map((threshold) => {
@@ -168,8 +137,7 @@ export default function MilestonePane({ totalTrees, onToast }: MilestonePaneProp
                 );
               })}
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

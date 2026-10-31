@@ -1,0 +1,107 @@
+rules_version = '2';
+
+// DhikrForest anti-cheat rules (no Cloud Functions needed).
+//
+// users/{uid}            public leaderboard row, only the owner can write it.
+// users/{uid}/private/*  owner-only backup of the forest (segments, goal, streak).
+//
+// The client is never trusted with its total. Every sync must:
+//   - be at least 5 s after the previous one (lastSync is the server clock),
+//   - add no more than a human could plant in that time (16 trees/s, 5,000 per
+//     sync, ×1000 only within 24 h of a Laylatul Qadr night),
+//   - keep the weekly counter consistent with the server's week.
+// Laylatul Qadr can be switched on once per 300 days and lasts at most 14 h.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedInAs(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // Weeks start Monday 00:00 UTC (the Unix epoch was a Thursday).
+    function currentWeek() {
+      return math.floor((request.time.toMillis() + 259200000) / 604800000);
+    }
+
+    function publicKeys() {
+      return ['nickname', 'total', 'weekTotal', 'weekIndex', 'lastSync', 'createdAt',
+              'qadrActivatedAt', 'qadrExpiresAt'];
+    }
+
+    function validNickname(n) {
+      return n is string && n.matches('^[^<>{}]{2,20}$');
+    }
+
+    function changed() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    function isRename() {
+      return changed().hasOnly(['nickname']);
+    }
+
+    function isQadrActivation() {
+      let n = request.resource.data;
+      let o = resource.data;
+      return changed().hasOnly(['qadrActivatedAt', 'qadrExpiresAt'])
+        && n.qadrActivatedAt == request.time
+        && (o.qadrActivatedAt == null || request.time > o.qadrActivatedAt + duration.value(300, 'd'))
+        && n.qadrExpiresAt is timestamp
+        && n.qadrExpiresAt > request.time
+        && n.qadrExpiresAt <= request.time + duration.value(14, 'h');
+    }
+
+    function qadrMultiplier() {
+      return resource.data.qadrExpiresAt != null
+        && request.time < resource.data.qadrExpiresAt + duration.value(24, 'h') ? 1000 : 1;
+    }
+
+    function isValidSync() {
+      let n = request.resource.data;
+      let o = resource.data;
+      let delta = n.total - o.total;
+      let elapsedMs = request.time.toMillis() - o.lastSync.toMillis();
+      return changed().hasOnly(['total', 'weekTotal', 'weekIndex', 'lastSync'])
+        && n.lastSync == request.time
+        && elapsedMs >= 5000
+        && n.total is int
+        && delta > 0
+        && delta <= (elapsedMs / 1000 * 16 + 16) * qadrMultiplier()
+        && delta <= 5000 * qadrMultiplier()
+        && n.weekIndex == currentWeek()
+        && n.weekTotal == (n.weekIndex == o.weekIndex ? o.weekTotal + delta : delta);
+    }
+
+    match /users/{uid} {
+      allow get, list: if true;
+
+      allow create: if signedInAs(uid)
+        && request.resource.data.keys().hasOnly(publicKeys())
+        && request.resource.data.keys().hasAll(publicKeys())
+        && validNickname(request.resource.data.nickname)
+        && request.resource.data.total == 0
+        && request.resource.data.weekTotal == 0
+        && request.resource.data.weekIndex == currentWeek()
+        && request.resource.data.lastSync == request.time
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.qadrActivatedAt == null
+        && request.resource.data.qadrExpiresAt == null;
+
+      allow update: if signedInAs(uid)
+        && validNickname(request.resource.data.nickname)
+        && (isRename() || isQadrActivation() || isValidSync());
+
+      // Deleting would let someone reset their Qadr night, so it's admin-only.
+      allow delete: if false;
+
+      match /private/{docId} {
+        allow read: if signedInAs(uid);
+        allow write: if signedInAs(uid)
+          && docId == 'forest'
+          && request.resource.data.keys().hasOnly(['segments', 'goal', 'streak', 'daily', 'resetAt', 'updatedAt'])
+          && request.resource.data.segments is list
+          && request.resource.data.segments.size() <= 20000;
+      }
+    }
+  }
+}

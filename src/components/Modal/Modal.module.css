@@ -1,0 +1,94 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 14, 0.72);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.18s ease-out;
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  max-height: calc(100dvh - 32px);
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, rgba(14, 24, 42, 0.99), rgba(8, 14, 26, 0.99));
+  border: 1px solid rgba(245, 200, 66, 0.35);
+  border-radius: 18px;
+  padding: 18px 20px 20px;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  line-height: 1.7;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.85);
+  animation: fadeUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cardWide {
+  max-width: 520px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(245, 200, 66, 0.2);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+.title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.02em;
+}
+.close {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+}
+.close:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.body {
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 2px;
+}
+.body::-webkit-scrollbar {
+  width: 5px;
+}
+.body::-webkit-scrollbar-thumb {
+  background: rgba(245, 200, 66, 0.3);
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop,
+  .card {
+    animation: none;
+  }
+}

@@ -8,7 +8,7 @@ export const ZIKRS: Zikr[] = [
     trees: 1,
   },
   {
-    arabic: 'سُبْحَانَ اللَّهِ وَالْحَمْدُ لِلَّهِ وَلَا إِلَٰهَه إِلَّا اللَّهُ وَاللَّهُ أَكْبَرُ',
+    arabic: 'سُبْحَانَ اللَّهِ وَالْحَمْدُ لِلَّهِ وَلَا إِلَٰهَ إِلَّا اللَّهُ وَاللَّهُ أَكْبَرُ',
     translit: 'Subḥānallāhi walḥamdulillāhi walā ilāha illallāhu wallāhu Akbar',
     meaning: '"Glory be to Allah, praise to Allah, none worthy of worship but Allah, Allah is Greatest"',
     trees: 4,

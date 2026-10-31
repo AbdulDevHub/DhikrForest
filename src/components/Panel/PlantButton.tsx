@@ -1,8 +1,9 @@
 import { forwardRef } from 'react';
+import type { MouseEvent } from 'react';
 import styles from './Panel.module.css';
 
 interface PlantButtonProps {
-  onPlant: () => void;
+  onPlant: (e: MouseEvent<HTMLButtonElement>) => void;
 }
 
 const PlantButton = forwardRef<HTMLButtonElement, PlantButtonProps>(function PlantButton(
@@ -10,9 +11,9 @@ const PlantButton = forwardRef<HTMLButtonElement, PlantButtonProps>(function Pla
   ref
 ) {
   return (
-    <button ref={ref} className={styles.zikrBtn} onClick={onPlant}>
+    <button ref={ref} type="button" className={styles.zikrBtn} onClick={onPlant}>
       🌱 Plant a Tree
-      <span className={styles.hint}>Press Enter or Space</span>
+      <span className={styles.hint}>Tap, or press Enter / Space</span>
     </button>
   );
 });

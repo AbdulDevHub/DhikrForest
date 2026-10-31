@@ -1,25 +1,61 @@
 {
-  "name": "zikr",
+  "name": "dhikrforest",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Free, offline dhikr counter and digital tasbih that plants a tree in your Jannah forest with every SubhanAllah. PWA with leaderboard.",
+  "keywords": [
+    "dhikr",
+    "zikr",
+    "tasbih",
+    "tasbeeh",
+    "dhikr-counter",
+    "islam",
+    "muslim",
+    "ramadan",
+    "laylatul-qadr",
+    "pwa",
+    "react",
+    "firebase"
+  ],
+  "homepage": "https://dhikrforest.netlify.app/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AbdulDevHub/DhikrForest.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AbdulDevHub/DhikrForest/issues"
+  },
+  "license": "MIT",
+  "author": "AbdulDevHub",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:rules": "firebase emulators:exec --only firestore --project dhikrforest-test \"node --test tests/firestore.rules.test.mjs\""
   },
   "dependencies": {
+    "@fontsource/amiri": "^5.3.0",
+    "@fontsource/tajawal": "^5.3.0",
+    "adhan": "^4.4.6",
+    "firebase": "^13.1.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^6.0.0",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
+    "@vite-pwa/assets-generator": "^2.0.0",
     "@vitejs/plugin-react": "^6.0.4",
+    "firebase-tools": "^15.34.2",
     "oxlint": "^1.75.0",
     "typescript": "~6.0.2",
-    "vite": "^8.2.0"
+    "vite": "^8.2.0",
+    "vite-plugin-pwa": "^2.0.0",
+    "workbox-build": "^7.4.1",
+    "workbox-window": "^7.4.1"
   }
 }

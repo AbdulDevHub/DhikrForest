@@ -1,5 +1,7 @@
-import type { RefObject } from 'react';
-import type { EffectiveTimeOfDay, TimeOfDayMode } from '../../types';
+import type { MouseEvent, RefObject } from 'react';
+import type { EffectiveTimeOfDay } from '../../types';
+import type { CloudUser } from '../../firebase/cloud';
+import type { useQadr } from '../../hooks/useQadr';
 import { ZIKRS } from '../../data/zikrs';
 import styles from './Panel.module.css';
 import Stars from './Stars';
@@ -12,28 +14,27 @@ import PlantButton from './PlantButton';
 import StatsRow from './StatsRow';
 import MilestonePane from './MilestonePane';
 import QadrToggle from './QadrToggle';
-import HadithPanel from './HadithPanel';
-import ResetButton from './ResetButton';
-import TimeSelector from './TimeSelector';
+import Toolbar from '../Toolbar/Toolbar';
+import type { ToolbarModal } from '../Toolbar/Toolbar';
 
 interface PanelProps {
   totalTrees: number;
   sessionCount: number;
-  rows: number;
+  todayCount: number;
+  goal: number;
+  streak: number;
   currentZikr: number;
   onSelectZikr: (index: number) => void;
-  qadrOn: boolean;
-  onToggleQadr: () => void;
-  onPlant: () => void;
-  onReset: () => void;
+  qadr: ReturnType<typeof useQadr>;
+  onPlant: (e: MouseEvent<HTMLButtonElement>) => void;
   bumpKey: number;
   isGlowing: boolean;
-  onToast?: (msg: string) => void;
+  onToast: (msg: string) => void;
   plantButtonRef: RefObject<HTMLButtonElement | null>;
-  resetButtonRef: RefObject<HTMLButtonElement | null>;
   effectiveTimeMode: EffectiveTimeOfDay;
-  timeMode: TimeOfDayMode;
-  onTimeMode: (mode: TimeOfDayMode) => void;
+  onOpen: (modal: ToolbarModal) => void;
+  onShare: () => void;
+  user: CloudUser | null;
 }
 
 const TIME_CLASS: Record<EffectiveTimeOfDay, string> = {
@@ -46,21 +47,21 @@ const TIME_CLASS: Record<EffectiveTimeOfDay, string> = {
 export default function Panel({
   totalTrees,
   sessionCount,
-  rows,
+  todayCount,
+  goal,
+  streak,
   currentZikr,
   onSelectZikr,
-  qadrOn,
-  onToggleQadr,
+  qadr,
   onPlant,
-  onReset,
   bumpKey,
   isGlowing,
   onToast,
   plantButtonRef,
-  resetButtonRef,
   effectiveTimeMode,
-  timeMode,
-  onTimeMode,
+  onOpen,
+  onShare,
+  user,
 }: PanelProps) {
   const showSun  = effectiveTimeMode === 'morning' || effectiveTimeMode === 'afternoon';
   const showMoon = effectiveTimeMode === 'night' || effectiveTimeMode === 'qadr';
@@ -68,7 +69,7 @@ export default function Panel({
 
   return (
     <aside
-      aria-label="Dhikr Control Panel"
+      aria-label="Dhikr counter"
       className={[
         styles.panel,
         timeCls,
@@ -81,25 +82,31 @@ export default function Panel({
       {showMoon && <Moon />}
       {showSun  && <Sun mode={effectiveTimeMode} />}
 
-      <Counter totalTrees={totalTrees} bumpKey={bumpKey} />
+      <div className={styles.panelInner}>
+        <Counter totalTrees={totalTrees} bumpKey={bumpKey} />
 
-      <div className={styles.divider} />
+        <div className={styles.divider} />
 
-      <ZikrBlock zikr={ZIKRS[currentZikr]} qadrOn={qadrOn} />
-      <ZikrNav currentZikr={currentZikr} onSelect={onSelectZikr} />
+        <ZikrBlock zikr={ZIKRS[currentZikr]} qadrOn={qadr.qadrOn} />
+        <ZikrNav currentZikr={currentZikr} onSelect={onSelectZikr} />
 
-      <PlantButton ref={plantButtonRef} onPlant={onPlant} />
+        <PlantButton ref={plantButtonRef} onPlant={onPlant} />
 
-      <StatsRow sessionCount={sessionCount} rows={rows} />
+        <StatsRow sessionCount={sessionCount} todayCount={todayCount} goal={goal} streak={streak} />
 
-      <MilestonePane totalTrees={totalTrees} onToast={onToast} />
+        <MilestonePane totalTrees={totalTrees} onToast={onToast} />
 
-      <QadrToggle qadrOn={qadrOn} onToggle={onToggleQadr} />
+        <QadrToggle
+          qadrOn={qadr.qadrOn}
+          status={qadr.status}
+          onSetOn={qadr.setQadrOn}
+          onRefresh={qadr.refresh}
+          onActivate={qadr.activate}
+          onToast={onToast}
+        />
 
-      <TimeSelector timeMode={timeMode} onChange={onTimeMode} />
-
-      <HadithPanel />
-      <ResetButton ref={resetButtonRef} onReset={onReset} />
+        <Toolbar onOpen={onOpen} onShare={onShare} user={user} />
+      </div>
     </aside>
   );
 }

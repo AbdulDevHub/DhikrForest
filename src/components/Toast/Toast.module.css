@@ -10,15 +10,15 @@
   font-size: 0.87rem;
   font-weight: 600;
   color: #fff;
-  z-index: 200;
+  z-index: 1100;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s, top 0.3s;
-  max-width: 92vw;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-family: 'Tajawal', sans-serif;
+  width: max-content;
+  max-width: min(92vw, 560px);
+  text-align: center;
+  line-height: 1.45;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
 }
 .toastVisible {
   opacity: 1;

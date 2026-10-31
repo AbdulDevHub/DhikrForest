@@ -8,18 +8,17 @@ interface ZikrNavProps {
 
 export default function ZikrNav({ currentZikr, onSelect }: ZikrNavProps) {
   return (
-    <div className={styles.zikrNav}>
-      {ZIKRS.map((_, i) => (
-        <div
+    <div className={styles.zikrNav} role="tablist" aria-label="Choose dhikr">
+      {ZIKRS.map((z, i) => (
+        <button
           key={i}
-          role="button"
-          aria-label={`Select dhikr ${i + 1}`}
-          tabIndex={0}
+          type="button"
+          role="tab"
+          aria-selected={i === currentZikr}
+          aria-label={z.translit}
+          title={z.translit}
           className={`${styles.zikrDot} ${i === currentZikr ? styles.zikrDotActive : ''}`}
           onClick={() => onSelect(i)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') onSelect(i);
-          }}
         />
       ))}
     </div>

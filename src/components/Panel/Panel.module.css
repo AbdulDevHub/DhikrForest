@@ -3,55 +3,79 @@
   width: var(--panel-w);
   flex-shrink: 0;
   height: 100vh;
-  overflow: hidden;
+  height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
   /* Default: Night sky */
   background: linear-gradient(180deg, #060011 0%, #0b1a3a 55%, #0e2544 100%);
   border-right: 2px solid rgba(60, 180, 30, 0.35);
   box-shadow: 2px 0 20px rgba(0, 0, 0, 0.8);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 18px;
-  padding: 28px 26px;
+  padding: 24px 24px 14px;
   z-index: 10;
   transition: background 1.2s ease, border-color 0.8s ease;
 }
 
-.panel > * {
+/* Glow overlay: fades in on milestones and Qadr plants (opacity only, no filters) */
+.panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 35%, rgba(245, 200, 66, 0.22), transparent 70%);
+  opacity: 0;
+  z-index: 1;
+}
+.panelGlow::after {
+  animation: skyPulse 1.4s ease;
+}
+@keyframes skyPulse {
+  50% {
+    opacity: 1;
+  }
+}
+
+.panelInner {
   position: relative;
   z-index: 2;
+  width: 100%;
+  margin: auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
 }
 
-.panel > .star,
-.panel > .moon,
-.panel > .sun {
+/* Stars: three box-shadow layers that each fade in and out */
+.stars {
   position: absolute;
-  z-index: 0;
-}
-
-/* Stars */
-.star {
-  position: absolute;
-  background: #fff;
-  border-radius: 50%;
+  inset: 0;
+  container-type: size;
   pointer-events: none;
-  animation: twinkle var(--d, 3s) ease-in-out infinite;
   z-index: 0;
+}
+.starLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  border-radius: 50%;
+  animation: twinkle 4s ease-in-out infinite alternate;
 }
 @keyframes twinkle {
-  0%,
-  100% {
-    opacity: var(--o1, 0.4);
-    transform: scale(1);
+  from {
+    opacity: 0.35;
   }
-  50% {
-    opacity: var(--o2, 0.9);
-    transform: scale(1.3);
+  to {
+    opacity: 1;
   }
 }
 
-/* Moon */
+/* Moon (glow pulses via an opacity layer instead of animating box-shadow) */
 .moon {
   position: absolute;
   top: 30px;
@@ -61,17 +85,23 @@
   border-radius: 50%;
   background: radial-gradient(circle at 38% 36%, #fffde0, #f0cc50);
   box-shadow: 0 0 24px 12px rgba(245, 208, 96, 0.3), 0 0 48px 24px rgba(245, 208, 96, 0.12);
-  animation: moonGlow 4.5s ease-in-out infinite;
   z-index: 1;
   pointer-events: none;
 }
+.moon::after {
+  content: '';
+  position: absolute;
+  inset: -26px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 208, 96, 0.35) 0%, transparent 65%);
+  animation: moonGlow 4.5s ease-in-out infinite alternate;
+}
 @keyframes moonGlow {
-  0%,
-  100% {
-    box-shadow: 0 0 24px 12px rgba(245, 208, 96, 0.3), 0 0 48px 24px rgba(245, 208, 96, 0.12);
+  from {
+    opacity: 0.3;
   }
-  50% {
-    box-shadow: 0 0 40px 20px rgba(245, 208, 96, 0.48), 0 0 80px 40px rgba(245, 208, 96, 0.22);
+  to {
+    opacity: 1;
   }
 }
 
@@ -97,6 +127,7 @@
   color: var(--gold);
   text-shadow: 0 0 28px rgba(245, 200, 66, 0.45);
   line-height: 1;
+  font-variant-numeric: tabular-nums;
   animation: countBump 0.25s cubic-bezier(0.17, 0.67, 0.34, 1.2);
 }
 @keyframes countBump {
@@ -121,7 +152,7 @@
 }
 .arabicText {
   font-family: 'Amiri', serif;
-  font-size: clamp(0.95rem, 1.9vw, 1.38rem);
+  font-size: clamp(1.1rem, 1.9vw, 1.38rem);
   color: var(--gold);
   text-shadow: 0 0 14px rgba(245, 200, 66, 0.38);
   line-height: 1.8;
@@ -152,20 +183,22 @@
 
 .zikrNav {
   display: flex;
-  gap: 9px;
+  gap: 4px;
   justify-content: center;
 }
 .zikrDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.18);
+  /* 7px dot inside a larger tap target */
+  width: 24px;
+  height: 24px;
+  border: none;
+  padding: 0;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.22) 3.5px, transparent 4px);
   cursor: pointer;
-  transition: background 0.2s, transform 0.2s;
+  border-radius: 50%;
+  transition: transform 0.2s;
 }
 .zikrDotActive {
-  background: var(--gold);
-  transform: scale(1.35);
+  background: radial-gradient(circle, var(--gold) 4.5px, transparent 5px);
 }
 
 /* Plant button */
@@ -173,19 +206,20 @@
   width: 100%;
   background: linear-gradient(150deg, #1e7a38, #2aaa50);
   border: none;
-  outline: none;
   border-radius: 14px;
   padding: 14px 0;
   font-size: 1rem;
   font-weight: 700;
-  font-family: 'Tajawal', sans-serif;
   color: #fff;
   cursor: pointer;
   letter-spacing: 0.07em;
   box-shadow: 0 4px 20px rgba(30, 120, 56, 0.38);
-  transition: transform 0.12s, box-shadow 0.15s;
+  transition: transform 0.12s;
   position: relative;
   overflow: hidden;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 .zikrBtn::before {
   content: '';
@@ -195,7 +229,6 @@
 }
 .zikrBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 28px rgba(30, 120, 56, 0.5);
 }
 .zikrBtn:active {
   transform: scale(0.96);
@@ -203,7 +236,7 @@
 .hint {
   display: block;
   font-size: 0.58rem;
-  opacity: 0.5;
+  opacity: 0.55;
   margin-top: 2px;
   letter-spacing: 0.1em;
   font-weight: 400;
@@ -216,10 +249,11 @@
 }
 .statBox {
   flex: 1;
+  min-width: 0;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 10px;
-  padding: 8px;
+  padding: 7px 6px;
   text-align: center;
 }
 .statLabel {
@@ -233,37 +267,76 @@
   font-size: 1rem;
   font-weight: 700;
   color: var(--mint);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.statOf {
+  font-size: 0.66rem;
+  font-weight: 600;
+  opacity: 0.7;
+}
+.statBar {
+  height: 3px;
+  margin-top: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+.statBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #f5c842);
+  transition: width 0.3s ease;
 }
 
 /* Qadr toggle */
+.qadrWrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 .qadrToggle {
+  position: relative;
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
+  text-align: left;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
-  padding: 9px 12px;
+  padding: 8px 12px;
   cursor: pointer;
   font-size: 0.77rem;
   color: var(--text-dim);
-  transition: all 0.3s;
-  font-family: 'Tajawal', sans-serif;
+  transition: background 0.3s, border-color 0.3s, color 0.3s;
+}
+.qadrToggle:disabled {
+  cursor: wait;
+}
+.qadrToggleLocked {
+  opacity: 0.75;
 }
 .qadrToggleActive {
   background: rgba(245, 200, 66, 0.07);
   border-color: rgba(245, 200, 66, 0.38);
   color: var(--gold);
-  animation: qadrPulse 2.2s ease-in-out infinite;
+}
+.qadrToggleActive::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 12px;
+  box-shadow: 0 0 24px rgba(245, 200, 66, 0.32);
+  pointer-events: none;
+  animation: qadrPulse 2.2s ease-in-out infinite alternate;
 }
 @keyframes qadrPulse {
-  0%,
-  100% {
-    box-shadow: 0 0 10px rgba(245, 200, 66, 0.1);
+  from {
+    opacity: 0.3;
   }
-  50% {
-    box-shadow: 0 0 24px rgba(245, 200, 66, 0.32);
+  to {
+    opacity: 1;
   }
 }
 .togglePill {
@@ -286,14 +359,28 @@
   height: 14px;
   background: #fff;
   border-radius: 50%;
-  transition: left 0.3s;
+  transition: transform 0.3s;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 .qadrToggleActive .toggleKnob {
-  left: 18px;
+  transform: translateX(16px);
+}
+.qadrText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 .qadrLabel {
-  flex: 1;
+  font-weight: 600;
+  color: var(--text-main);
+}
+.qadrToggleActive .qadrLabel {
+  color: var(--gold);
+}
+.qadrSub {
+  font-size: 0.64rem;
+  opacity: 0.85;
 }
 .qadrMult {
   font-size: 0.66rem;
@@ -307,110 +394,66 @@
 .qadrToggleActive .qadrMult {
   display: inline;
 }
-
-.hadithToggle {
-  width: 100%;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  color: var(--text-dim);
-  font-size: 0.73rem;
-  letter-spacing: 0.05em;
-  padding: 7px 14px;
-  cursor: pointer;
-  font-family: 'Tajawal', sans-serif;
-  transition: border-color 0.2s, color 0.2s;
-}
-.hadithToggle:hover {
-  border-color: rgba(255, 255, 255, 0.2);
-  color: var(--text-main);
-}
-
-.resetBtn {
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.18);
-  font-size: 0.63rem;
-  letter-spacing: 0.08em;
-  cursor: pointer;
-  transition: color 0.2s;
-  font-family: 'Tajawal', sans-serif;
-  padding: 2px 0;
-}
-.resetBtn:hover {
-  color: #ef4444;
-}
-
-.hadithBackdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(4px);
-  z-index: 999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-}
-
-.hadith {
-  position: relative;
-  width: 90%;
-  max-width: 440px;
-  background: rgba(10, 18, 32, 0.98);
+.qadrConfirm {
+  background: rgba(245, 200, 66, 0.08);
   border: 1px solid rgba(245, 200, 66, 0.35);
-  border-radius: 18px;
-  padding: 20px 22px;
-  font-size: 0.78rem;
-  color: var(--text-dim);
-  line-height: 1.8;
-  z-index: 1000;
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.85);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.74rem;
+  color: var(--text-main);
+  animation: fadeUp 0.2s ease-out;
 }
-.hadithShow {
-  display: block;
-  animation: fadeUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+.qadrConfirmBtns {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.qadrYes,
+.qadrNo {
+  flex: 1;
+  border-radius: 9px;
+  padding: 7px;
+  font-weight: 700;
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+.qadrYes {
+  background: var(--gold);
+  color: #2a1a00;
+  border: none;
+}
+.qadrNo {
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 @keyframes fadeUp {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(6px);
   }
 }
-.hadithHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: 700;
-  color: var(--gold);
-  font-size: 0.9rem;
-  margin-bottom: 12px;
-  border-bottom: 1px solid rgba(245, 200, 66, 0.2);
-  padding-bottom: 8px;
-}
-.hadithClose {
-  background: transparent;
-  border: none;
-  color: var(--text-dim);
-  font-size: 1rem;
-  cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 4px;
-  transition: color 0.2s, background 0.2s;
-}
-.hadithClose:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.1);
-}
+
+/* Hadith modal content */
 .hadithBody strong {
   color: var(--gold);
   display: block;
   margin-bottom: 4px;
-  font-size: 0.82rem;
+  font-size: 0.84rem;
+}
+.hadithBody strong[lang='ar'] {
+  font-family: 'Amiri', serif;
+  font-size: 1rem;
+  font-weight: 400;
+}
+.hadithTag {
+  color: var(--mint);
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+.hadithNote {
+  font-size: 0.72rem;
+  font-style: italic;
 }
 .sep {
   margin: 12px 0;
@@ -450,33 +493,19 @@
   border-right-color: rgba(30, 120, 165, 0.5);
 }
 
-/* Qadr sky effect on left panel */
+/* Qadr sky: deep violet night with a luminous moon */
 .panelQadrActive {
   background: linear-gradient(
     180deg,
-    #020008 0%,
-    #06001a 35%,
-    #0a0a28 65%,
-    #0d1030 100%
+    #04000e 0%,
+    #0a0428 35%,
+    #10123a 65%,
+    #121a44 100%
   ) !important;
-  border-right-color: rgba(100, 220, 140, 0.4);
-  filter: brightness(1.15) saturate(1.25);
+  border-right-color: rgba(100, 220, 140, 0.45);
 }
 .panelQadrActive .moon {
-  box-shadow: 0 0 55px 28px rgba(245, 208, 96, 0.6), 0 0 110px 55px rgba(245, 208, 96, 0.28) !important;
-}
-
-.panelGlow {
-  animation: skyPulse 1.4s ease;
-}
-@keyframes skyPulse {
-  0%,
-  100% {
-    filter: brightness(1);
-  }
-  50% {
-    filter: brightness(1.28) hue-rotate(10deg);
-  }
+  box-shadow: 0 0 55px 28px rgba(245, 208, 96, 0.6), 0 0 110px 55px rgba(245, 208, 96, 0.28);
 }
 
 /* ── Sun Component ───────────────────────────────────────────── */
@@ -538,6 +567,14 @@
   50%       { opacity: 1;    transform: scale(1.08); }
 }
 
+/* Rays sit in one rotating group that fades as a whole (1 animation, not 8) */
+.sunRays {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  animation: rayPulse 3.5s ease-in-out infinite;
+}
+
 .sunRay {
   position: absolute;
   /* Place the bottom-center of the ray at the sun's exact center */
@@ -549,8 +586,6 @@
   /* pivot at bottom = sun center; rotate to fan out, then push 4px gap from core */
   transform-origin: bottom center;
   transform: rotate(var(--ray-angle, 0deg)) translateY(-4px);
-  animation: rayPulse 3.5s ease-in-out infinite;
-  z-index: 1;
 }
 
 @keyframes rayPulse {
@@ -610,13 +645,6 @@
   color: var(--gold);
 }
 
-@media (max-width: 720px) {
-  .panel {
-    width: 100%;
-    height: auto;
-    min-height: 100vh;
-  }
-}
 
 /* Milestone Pane & Goal Tracker */
 .milestonePane {
@@ -778,13 +806,8 @@
   background: rgba(245, 200, 66, 0.2);
   color: var(--gold);
   border: 1px solid rgba(245, 200, 66, 0.4);
-  animation: pulseBadge 1.8s ease-in-out infinite;
 }
 
-@keyframes pulseBadge {
-  0%, 100% { opacity: 0.8; }
-  50% { opacity: 1; }
-}
 
 .badgeLocked {
   background: rgba(255, 255, 255, 0.06);
@@ -812,3 +835,37 @@
   color: var(--mint);
 }
 
+
+@media (max-width: 720px) {
+  .panel {
+    width: 100%;
+    height: auto;
+    overflow: clip;
+    border-right: none;
+    border-top: 2px solid rgba(60, 180, 30, 0.35);
+    box-shadow: none;
+    padding: 18px 16px 14px;
+  }
+  .treeCountDisplay {
+    font-size: 2.6rem;
+  }
+  .moon,
+  .sun {
+    top: 14px;
+    right: 14px;
+    scale: 0.8;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .starLayer,
+  .moon::after,
+  .sunGlow,
+  .sunRays,
+  .qadrToggleActive::after,
+  .panelGlow::after,
+  .treeCountDisplay,
+  .qadrConfirm {
+    animation: none;
+  }
+}

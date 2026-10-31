@@ -1,46 +1,34 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ZIKRS, MILESTONE_THRESHOLDS, MILESTONES } from '../data/zikrs';
-import { STORAGE_KEYS, TREES_PER_PAGE } from '../utils/constants';
+import { QADR_MULTIPLIER } from '../utils/constants';
 import { numPages, numRows } from '../utils/geometry';
-import { useStoredNumber } from './useStoredNumber';
-import type { LeafParticle, TreeItem } from '../types';
+import { appendTrees, pageItems, totalValue, treeCount } from '../lib/forestSegments';
+import { todayKey } from '../lib/secureStore';
+import { appNow } from '../lib/qadr';
+import { useSavedState } from './useSavedState';
+import { useQadr } from './useQadr';
+import type { LeafParticle, SavedState } from '../types';
 
 let leafIdSeq = 0;
 
-function loadStoredItems(): TreeItem[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.treeItems);
-    if (raw) {
-      return JSON.parse(raw);
-    }
-  } catch {
-    /* ignore parse error */
-  }
-
-  // Fallback / legacy migration: if treeItems not initialized yet but treeCount exists
-  const legacyCountStr = localStorage.getItem(STORAGE_KEYS.legacyTreeCount);
-  if (legacyCountStr) {
-    const count = parseInt(legacyCountStr, 10) || 0;
-    if (count > 0) {
-      const items: TreeItem[] = Array.from({ length: count }, (_, i) => ({
-        id: i,
-        type: 'standard',
-      }));
-      localStorage.setItem(STORAGE_KEYS.treeItems, JSON.stringify(items));
-      return items;
-    }
-  }
-
-  return [];
+function yesterdayKey(now: Date): string {
+  const d = new Date(now);
+  d.setDate(d.getDate() - 1);
+  return todayKey(d);
 }
 
-export function useForestState() {
-  const [totalTrees, setTotalTrees] = useStoredNumber(STORAGE_KEYS.totalTrees, 0);
-  const [treeItems, setTreeItems] = useState<TreeItem[]>(loadStoredItems);
-  const [currentPage, setCurrentPage] = useState<number>(0);
+/** Streak still counts if the goal was met today or yesterday. */
+function liveStreak(streak: SavedState['streak'], now: Date): number {
+  const last = streak.lastGoalDay;
+  return last === todayKey(now) || last === yesterdayKey(now) ? streak.count : 0;
+}
+
+/** `syncUid`: signed-in user; trees planted while set are queued for the leaderboard. */
+export function useForestState(syncUid: string | null) {
+  const { state, setState, tamperedOnLoad } = useSavedState();
+  const [currentPage, setCurrentPage] = useState<number>(() => numPages(treeCount(state.segments)) - 1);
   const [sessionCount, setSessionCount] = useState(0);
   const [currentZikr, setCurrentZikr] = useState(0);
-  const [qadrOn, setQadrOn] = useState(false);
 
   const [flashKey, setFlashKey] = useState(0);
   const [bumpKey, setBumpKey] = useState(0);
@@ -57,15 +45,6 @@ export function useForestState() {
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [leaves, setLeaves] = useState<LeafParticle[]>([]);
 
-  // Persist treeItems to localStorage whenever changed
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.treeItems, JSON.stringify(treeItems));
-    } catch {
-      /* ignore storage quota limits */
-    }
-  }, [treeItems]);
-
   const showToast = useCallback(
     (msg: string) => {
       setToastMessage(msg);
@@ -76,6 +55,8 @@ export function useForestState() {
     [pulseGlow]
   );
 
+  const qadr = useQadr(state, setState, showToast);
+
   useEffect(() => {
     return () => {
       if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -83,14 +64,18 @@ export function useForestState() {
     };
   }, []);
 
-  // Welcome back toast on initial load
+  const totalTrees = totalValue(state.segments);
+
+  // Welcome back / tamper notice on initial load
   useEffect(() => {
-    if (totalTrees > 0) {
-      const t = setTimeout(() => {
+    const t = setTimeout(() => {
+      if (tamperedOnLoad) {
+        showToast('⚠️ Saved data was edited outside the app, so your last verified forest was restored.');
+      } else if (totalTrees > 0) {
         showToast(`Welcome back! ${totalTrees.toLocaleString()} trees in Jannah 🌳`);
-      }, 900);
-      return () => clearTimeout(t);
-    }
+      }
+    }, 900);
+    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -111,83 +96,93 @@ export function useForestState() {
       };
     });
     setLeaves((prev) => [...prev, ...fresh]);
-    fresh.forEach((leaf) => {
-      setTimeout(() => {
-        setLeaves((prev) => prev.filter((l) => l.id !== leaf.id));
-      }, 1100);
-    });
+    const ids = new Set(fresh.map((l) => l.id));
+    setTimeout(() => setLeaves((prev) => prev.filter((l) => !ids.has(l.id))), 1100);
   }, []);
 
   const plant = useCallback(
     (buttonRect: DOMRect | null) => {
       const z = ZIKRS[currentZikr];
       const itemsToPlant = z.trees; // 1 or 4 items per click
-      const valuePerItem = qadrOn ? 1000 : 1;
-      const treesToAddTotal = itemsToPlant * valuePerItem;
+      // Re-check the clock: the status tick can lag behind Fajr by a few seconds.
+      const isQadr = qadr.qadrOn && state.qadr !== null && appNow().getTime() < state.qadr.expiresAt;
+      const value = itemsToPlant * (isQadr ? QADR_MULTIPLIER : 1);
 
-      const prevTotal = totalTrees;
-      const nextTotal = prevTotal + treesToAddTotal;
+      const prevTotal = totalValue(state.segments);
+      const nextTotal = prevTotal + value;
+      const nextSegments = appendTrees(state.segments, isQadr ? 'qadr' : 'standard', itemsToPlant);
 
-      const newItems: TreeItem[] = Array.from({ length: itemsToPlant }, (_, i) => ({
-        id: Date.now() + i + Math.random(),
-        type: qadrOn ? 'qadr' : 'standard',
+      const now = appNow();
+      const today = todayKey(now);
+      const dailyCount = (state.daily.day === today ? state.daily.count : 0) + 1;
+      let streak = state.streak;
+      const goalJustMet = dailyCount === state.goal;
+      if (goalJustMet && streak.lastGoalDay !== today) {
+        const continues = streak.lastGoalDay === yesterdayKey(now);
+        streak = { count: continues ? streak.count + 1 : 1, lastGoalDay: today };
+      }
+
+      setState((s) => ({
+        ...s,
+        segments: nextSegments,
+        daily: { day: today, count: dailyCount },
+        streak,
+        pending: syncUid ? { ...s.pending, [syncUid]: (s.pending[syncUid] ?? 0) + value } : s.pending,
       }));
-
-      const nextTreeItems = [...treeItems, ...newItems];
-      const totalPages = numPages(nextTreeItems.length);
-      const newestPageIndex = totalPages - 1;
-
-      setTotalTrees(nextTotal);
-      setSessionCount((s) => s + treesToAddTotal);
-      setTreeItems(nextTreeItems);
-      setCurrentPage(newestPageIndex);
+      setSessionCount((s) => s + value);
+      setCurrentPage(numPages(treeCount(nextSegments)) - 1);
 
       setFlashKey((k) => k + 1);
       setBumpKey((k) => k + 1);
       spawnLeaves(buttonRect);
+      if (state.haptics && 'vibrate' in navigator) navigator.vibrate(12);
 
+      let toasted = false;
       for (const m of MILESTONE_THRESHOLDS) {
         if (nextTotal >= m && prevTotal < m) {
           showToast(MILESTONES[m]);
+          toasted = true;
           break;
         }
       }
+      if (goalJustMet && !toasted) {
+        showToast(`🎯 Daily goal of ${state.goal} reached! 🔥 ${streak.count}-day streak`);
+      }
 
-      if (qadrOn) pulseGlow(1400);
+      if (isQadr) pulseGlow(1400);
     },
-    [currentZikr, qadrOn, totalTrees, treeItems, setTotalTrees, spawnLeaves, showToast, pulseGlow]
+    [currentZikr, qadr.qadrOn, state, syncUid, setState, spawnLeaves, showToast, pulseGlow]
   );
 
   const reset = useCallback(() => {
-    setTotalTrees(0);
+    setState((s) => ({
+      ...s,
+      segments: [],
+      daily: { day: todayKey(appNow()), count: 0 },
+      streak: { count: 0, lastGoalDay: null },
+      resetAt: Date.now(),
+    }));
     setSessionCount(0);
-    setTreeItems([]);
     setCurrentPage(0);
-  }, [setTotalTrees]);
+  }, [setState]);
 
-  const toggleQadr = useCallback(() => {
-    setQadrOn((on) => {
-      const next = !on;
-      if (next) showToast('🌙 Laylatul Qadr active — every deed ×1000!');
-      return next;
-    });
-  }, [showToast]);
+  const setGoal = useCallback((goal: number) => setState((s) => ({ ...s, goal })), [setState]);
+  const setHaptics = useCallback((haptics: boolean) => setState((s) => ({ ...s, haptics })), [setState]);
 
-  const totalPages = numPages(treeItems.length);
-
-  // Active page's subset of items
-  const startIdx = currentPage * TREES_PER_PAGE;
-  const activePageItems = treeItems.slice(startIdx, startIdx + TREES_PER_PAGE);
+  const slots = treeCount(state.segments);
+  const totalPages = numPages(slots);
+  const activePageItems = useMemo(() => pageItems(state.segments, currentPage), [state.segments, currentPage]);
+  const now = appNow();
 
   return {
+    state,
+    setState,
     totalTrees,
     sessionCount,
-    treeCount: treeItems.length,
     rows: numRows(activePageItems.length),
     currentZikr,
     setCurrentZikr,
-    qadrOn,
-    toggleQadr,
+    qadr,
     plant,
     reset,
     flashKey,
@@ -200,5 +195,11 @@ export function useForestState() {
     setCurrentPage,
     totalPages,
     activePageItems,
+    todayCount: state.daily.day === todayKey(now) ? state.daily.count : 0,
+    streak: liveStreak(state.streak, now),
+    goal: state.goal,
+    setGoal,
+    haptics: state.haptics,
+    setHaptics,
   };
 }

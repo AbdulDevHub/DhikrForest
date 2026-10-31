@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Tooling output
+.playwright-mcp
+.firebase
+firebase-debug.log
+firestore-debug.log
+ui-debug.log

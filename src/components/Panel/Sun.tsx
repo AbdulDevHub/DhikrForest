@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import type { EffectiveTimeOfDay } from '../../types';
 import styles from './Panel.module.css';
 
@@ -8,19 +9,21 @@ interface SunProps {
 export default function Sun({ mode }: SunProps) {
   const isMorning = mode === 'morning';
   return (
-    <div className={`${styles.sun} ${isMorning ? styles.sunMorning : styles.sunAfternoon}`}>
+    <div className={`${styles.sun} ${isMorning ? styles.sunMorning : styles.sunAfternoon}`} aria-hidden="true">
       {/* Outer glow ring */}
       <div className={styles.sunGlow} />
       {/* Inner core */}
       <div className={styles.sunCore} />
       {/* Rays */}
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div
-          key={i}
-          className={styles.sunRay}
-          style={{ '--ray-angle': `${i * 45}deg` } as React.CSSProperties}
-        />
-      ))}
+      <div className={styles.sunRays}>
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div
+            key={i}
+            className={styles.sunRay}
+            style={{ '--ray-angle': `${i * 45}deg` } as CSSProperties}
+          />
+        ))}
+      </div>
     </div>
   );
 }

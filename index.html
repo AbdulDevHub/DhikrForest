@@ -2,70 +2,77 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
-    <!-- Primary Title & Meta Tags -->
-    <title>DhikrForest — Plant Trees in Jannah | Visual Offline Dhikr Counter</title>
-    <meta name="title" content="DhikrForest — Plant Trees in Jannah | Visual Offline Dhikr Counter" />
-    <meta name="description" content="A beautiful, offline-first Islamic dhikr counter and visualiser that plants trees in Jannah as you remember Allah. Track daily zikr, achieve milestones, and earn eternal rewards." />
-    <meta name="keywords" content="dhikr counter, zikr counter, islamic app, subhanallah wa bihamdihi, jannah trees, tasbih online, offline dhikr, laylatul qadr, islamic forest visualiser, hadith dhikr, tasbeeh counter" />
-    <meta name="author" content="AbdulDevHub / DhikrForest" />
-    <meta name="robots" content="index, follow" />
-    <meta name="theme-color" content="#060011" />
-    <link rel="canonical" href="https://dhikrforest.com/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
-    <!-- Open Graph / Facebook -->
+    <!-- Primary Title & Meta Tags -->
+    <title>DhikrForest: Dhikr Counter & Tasbih That Plants Trees in Jannah</title>
+    <meta name="description" content="Free online dhikr counter and digital tasbih. Every SubhanAllah plants a tree in your Jannah forest. Works offline, daily goals, streaks, Laylatul Qadr mode and a global leaderboard." />
+    <meta name="keywords" content="dhikr counter, zikr counter, tasbih counter, digital tasbih, online tasbeeh, tasbeeh counter, subhanallah wa bihamdihi, trees in jannah, islamic app, muslim app, ramadan, laylatul qadr, dhikr app, sadaqah jariyah" />
+    <meta name="author" content="AbdulDevHub" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#060011" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="canonical" href="https://dhikrforest.netlify.app/" />
+
+    <!-- App / PWA (the manifest link is injected by vite-plugin-pwa at build) -->
+    <meta name="application-name" content="DhikrForest" />
+    <meta name="apple-mobile-web-app-title" content="DhikrForest" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" sizes="any" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
+
+    <!-- Open Graph / Facebook / WhatsApp -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://dhikrforest.com/" />
-    <meta property="og:title" content="DhikrForest — Plant Trees in Jannah" />
-    <meta property="og:description" content="Visualise your daily remembrance of Allah as a growing forest in Jannah. Offline-first, milestone tracking, and authentic Hadiths." />
-    <meta property="og:image" content="https://dhikrforest.com/favicon.svg" />
+    <meta property="og:url" content="https://dhikrforest.netlify.app/" />
     <meta property="og:site_name" content="DhikrForest" />
+    <meta property="og:title" content="DhikrForest: Plant a Tree in Jannah With Every Dhikr" />
+    <meta property="og:description" content="Free dhikr counter and digital tasbih. Watch your forest in Jannah grow with every SubhanAllah. Works offline, with daily goals, streaks and a leaderboard." />
+    <meta property="og:image" content="https://dhikrforest.netlify.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="DhikrForest: a dense green forest of trees planted by dhikr, next to the words Plant a tree in Jannah with every dhikr" />
     <meta property="og:locale" content="en_US" />
 
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://dhikrforest.com/" />
-    <meta property="twitter:title" content="DhikrForest — Plant Trees in Jannah" />
-    <meta property="twitter:description" content="Visualise your daily dhikr as a lush forest in Jannah. Offline-first, Laylatul Qadr mode, and goal tracking." />
-    <meta property="twitter:image" content="https://dhikrforest.com/favicon.svg" />
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="DhikrForest: Plant a Tree in Jannah With Every Dhikr" />
+    <meta name="twitter:description" content="Free dhikr counter and digital tasbih. Watch your forest in Jannah grow with every SubhanAllah. Works offline." />
+    <meta name="twitter:image" content="https://dhikrforest.netlify.app/og-image.png" />
+    <meta name="twitter:image:alt" content="DhikrForest: a dense green forest of trees planted by dhikr" />
 
-    <!-- Favicon & PWA Manifest -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <!-- Firebase sign-in: open the connection early, only used after the page is idle -->
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Tajawal:wght@300;400;500;700&display=swap"
-      rel="stylesheet"
-    />
-
-    <!-- JSON-LD Structured Data Schema -->
+    <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "WebApplication",
         "name": "DhikrForest",
-        "alternateName": "Dhikr Forest",
-        "url": "https://dhikrforest.com/",
-        "description": "An offline-first Islamic dhikr counter and visualiser that displays daily remembrance as a growing forest in Jannah.",
+        "alternateName": ["Dhikr Forest", "DhikrForest Tasbih"],
+        "url": "https://dhikrforest.netlify.app/",
+        "description": "A free, offline-first dhikr counter and digital tasbih that plants a tree in your Jannah forest with every remembrance of Allah.",
         "applicationCategory": "LifestyleApplication",
-        "operatingSystem": "All",
-        "browserRequirements": "Requires JavaScript. Requires HTML5 Canvas.",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD"
-        },
+        "operatingSystem": "Any (web browser, installable PWA)",
+        "browserRequirements": "Requires JavaScript and HTML5 Canvas.",
+        "inLanguage": "en",
+        "isAccessibleForFree": true,
+        "image": "https://dhikrforest.netlify.app/og-image.png",
+        "screenshot": "https://dhikrforest.netlify.app/screenshots/wide.png",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "author": { "@type": "Person", "name": "AbdulDevHub", "url": "https://github.com/AbdulDevHub" },
+        "sameAs": ["https://github.com/AbdulDevHub/DhikrForest"],
         "featureList": [
-          "Offline-first dhikr counter",
-          "Visual top-view forest rendering (1,000 trees per page)",
-          "Laylatul Qadr x1000 multiplier mode",
-          "Milestone goal tracking pane",
-          "Authentic Hadith citations"
+          "Dhikr counter and digital tasbih that works offline",
+          "Visual forest: 1,000 trees per page",
+          "Daily dhikr goal and streaks",
+          "Laylatul Qadr ×1000 mode in the last ten nights of Ramadan",
+          "Weekly and all-time leaderboard with Google sign-in",
+          "Installable app (PWA)",
+          "Authentic hadith references"
         ]
       }
     </script>
@@ -79,31 +86,39 @@
             "name": "What is DhikrForest?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "DhikrForest is a web application designed as an offline-first dhikr counter. It visualises your daily remembrance (dhikr) as a growing forest in Jannah."
+              "text": "DhikrForest is a free online dhikr counter and digital tasbih. Each time you say a dhikr such as SubhanAllahi wa bihamdihi and tap the button, a tree is planted in your personal forest, a visual reminder of the trees promised in Jannah."
             }
           },
           {
             "@type": "Question",
-            "name": "How does DhikrForest plant trees in Jannah?",
+            "name": "Which hadith says dhikr plants trees in Jannah?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "According to authentic Hadiths in Sahih Muslim and Sahih al-Bukhari, reciting dhikr such as 'SubhanAllahi wa bihamdihi' plants a tree in Jannah for the reciter. DhikrForest visualises these trees on interactive 1,000-tree canvas pages."
+              "text": "The Prophet ﷺ said: whoever says SubhanAllahil-Azim wa bihamdihi, a palm tree is planted for him in Paradise (Jami at-Tirmidhi 3464). He also taught that each of SubhanAllah, Alhamdulillah, La ilaha illallah and Allahu Akbar plants a tree in Paradise (Sunan Ibn Majah 3807)."
             }
           },
           {
             "@type": "Question",
-            "name": "Is DhikrForest free and offline?",
+            "name": "Does the dhikr counter work offline?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Yes, DhikrForest is completely free to use and works entirely offline using browser localStorage so your progress is preserved automatically."
+              "text": "Yes. DhikrForest saves your forest on your device and can be installed to your home screen as an app, so it works fully offline. Signing in is optional."
             }
           },
           {
             "@type": "Question",
-            "name": "What is Laylatul Qadr mode in DhikrForest?",
+            "name": "How does the leaderboard work?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Laylatul Qadr mode activates a x1000 multiplier for planted trees, representing the immense rewards of worship during the Night of Decree, planting special golden-emerald trees."
+              "text": "Sign in with Google and pick a public nickname. Trees you plant while signed in count toward the weekly and all-time leaderboards. Totals are checked on the server at a human pace to keep it fair, and your real name and email are never shown."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is Laylatul Qadr mode?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The Night of Decree is better than a thousand months (Quran 97:3). During the last ten nights of Ramadan you can switch on Laylatul Qadr mode once per year; until Fajr, every dhikr plants golden trees worth 1,000 each."
             }
           }
         ]
@@ -112,6 +127,16 @@
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <main style="max-width: 640px; margin: 40px auto; padding: 0 16px; font-family: system-ui, sans-serif; color: #ede8d8; line-height: 1.6">
+        <h1>DhikrForest: dhikr counter and digital tasbih</h1>
+        <p>
+          A free dhikr counter that plants a tree in your Jannah forest with every SubhanAllah. It works offline, tracks
+          daily goals and streaks, and has a Laylatul Qadr mode and a global leaderboard. Please enable JavaScript to use
+          it.
+        </p>
+      </main>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

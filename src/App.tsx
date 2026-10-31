@@ -1,20 +1,39 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { MouseEvent } from 'react';
 import Panel from './components/Panel/Panel';
 import ForestSide from './components/Forest/ForestSide';
 import Toast from './components/Toast/Toast';
 import LeafParticles from './components/Leaves/LeafParticles';
+import HadithPanel from './components/Panel/HadithPanel';
+import SettingsModal from './components/Toolbar/SettingsModal';
+import AccountModal from './components/Toolbar/AccountModal';
+import LeaderboardModal from './components/Leaderboard/LeaderboardModal';
+import type { ToolbarModal } from './components/Toolbar/Toolbar';
 import { useForestState } from './hooks/useForestState';
 import { useTimeOfDay } from './hooks/useTimeOfDay';
+import { useCloud } from './hooks/useCloud';
+import { useCloudSync } from './hooks/useCloudSync';
+import { useInstallPrompt } from './hooks/useInstallPrompt';
+import { createPlantGuard } from './lib/plantGuard';
+import { shareForest } from './lib/share';
+
+/** Elements that keep their own Enter/Space behaviour instead of planting. */
+function isOtherControl(el: Element | null, plantButton: HTMLElement | null): boolean {
+  if (!el || el === document.body || el === plantButton) return false;
+  return el.matches('button, a, input, select, textarea, [role="switch"], [role="tab"], [contenteditable="true"]');
+}
 
 export default function App() {
+  const cloud = useCloud();
+  const forest = useForestState(cloud.syncUid);
   const {
+    state,
+    setState,
     totalTrees,
     sessionCount,
-    rows,
     currentZikr,
     setCurrentZikr,
-    qadrOn,
-    toggleQadr,
+    qadr,
     plant,
     reset,
     flashKey,
@@ -27,54 +46,84 @@ export default function App() {
     setCurrentPage,
     totalPages,
     activePageItems,
-  } = useForestState();
+    todayCount,
+    streak,
+    goal,
+    setGoal,
+    haptics,
+    setHaptics,
+  } = forest;
 
-  const { timeMode, setTimeMode, effectiveTimeMode } = useTimeOfDay(qadrOn);
+  useCloudSync(cloud, state, setState, showToast);
+  const install = useInstallPrompt();
+  const { timeMode, setTimeMode, effectiveTimeMode } = useTimeOfDay(qadr.qadrOn);
+  const [modal, setModal] = useState<ToolbarModal | null>(null);
 
   const plantButtonRef = useRef<HTMLButtonElement>(null);
-  const resetButtonRef = useRef<HTMLButtonElement>(null);
+  const [guard] = useState(createPlantGuard);
 
-  const handlePlant = () => {
-    plant(plantButtonRef.current?.getBoundingClientRect() ?? null);
+  const doPlant = () => plant(plantButtonRef.current?.getBoundingClientRect() ?? null);
+  const doPlantRef = useRef(doPlant);
+  doPlantRef.current = doPlant;
+
+  const handlePlantClick = (e: MouseEvent<HTMLButtonElement>) => {
+    if (guard.pointer(e.nativeEvent)) doPlant();
   };
-
-  const handlePlantRef = useRef(handlePlant);
-  handlePlantRef.current = handlePlant;
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if ((e.key === 'Enter' || e.key === ' ') && document.activeElement !== resetButtonRef.current) {
-        e.preventDefault();
-        handlePlantRef.current();
-      }
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      if (document.querySelector('[role="dialog"]')) return;
+      if (isOtherControl(document.activeElement, plantButtonRef.current)) return;
+      e.preventDefault();
+      if (guard.keyDown(e)) doPlantRef.current();
     }
+    const onKeyUp = (e: KeyboardEvent) => {
+      guard.keyUp(e);
+      // Firefox/Safari activate a focused button on Space keyup; that would be a second plant.
+      if (e.key === ' ' && document.activeElement === plantButtonRef.current) e.preventDefault();
+    };
+    const onBlur = () => guard.reset();
     document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, []);
+    document.addEventListener('keyup', onKeyUp);
+    window.addEventListener('blur', onBlur);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', onBlur);
+    };
+  }, [guard]);
+
+  const handleShare = useCallback(async () => {
+    const result = await shareForest(totalTrees);
+    if (result === 'copied') showToast('🔗 Link copied. Share it and earn the reward of every dhikr it inspires!');
+    else if (result === 'failed') showToast('Could not share. Copy the address bar link instead.');
+  }, [totalTrees, showToast]);
+
+  const closeModal = useCallback(() => setModal(null), []);
+  const pendingTrees = cloud.user ? (state.pending[cloud.user.uid] ?? 0) : 0;
 
   return (
     <>
-      <h1 style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', border: 0 }}>
-        DhikrForest — Plant Trees in Jannah | Visual Dhikr Counter
-      </h1>
+      <h1 className="visually-hidden">DhikrForest: a free dhikr counter that plants trees in Jannah</h1>
       <Panel
         totalTrees={totalTrees}
         sessionCount={sessionCount}
-        rows={rows}
+        todayCount={todayCount}
+        goal={goal}
+        streak={streak}
         currentZikr={currentZikr}
         onSelectZikr={setCurrentZikr}
-        qadrOn={qadrOn}
-        onToggleQadr={toggleQadr}
-        onPlant={handlePlant}
-        onReset={reset}
+        qadr={qadr}
+        onPlant={handlePlantClick}
         bumpKey={bumpKey}
         isGlowing={isGlowing}
         onToast={showToast}
         plantButtonRef={plantButtonRef}
-        resetButtonRef={resetButtonRef}
         effectiveTimeMode={effectiveTimeMode}
-        timeMode={timeMode}
-        onTimeMode={setTimeMode}
+        onOpen={setModal}
+        onShare={handleShare}
+        user={cloud.user}
       />
 
       <ForestSide
@@ -85,6 +134,32 @@ export default function App() {
         flashKey={flashKey}
         effectiveTimeMode={effectiveTimeMode}
       />
+
+      {modal === 'hadith' && <HadithPanel onClose={closeModal} />}
+      {modal === 'settings' && (
+        <SettingsModal
+          onClose={closeModal}
+          goal={goal}
+          onGoal={setGoal}
+          timeMode={timeMode}
+          onTimeMode={setTimeMode}
+          haptics={haptics}
+          onHaptics={setHaptics}
+          install={install}
+          onReset={reset}
+        />
+      )}
+      {modal === 'account' && (
+        <AccountModal cloud={cloud} pendingTrees={pendingTrees} onClose={closeModal} onToast={showToast} />
+      )}
+      {modal === 'leaderboard' && (
+        <LeaderboardModal
+          onClose={closeModal}
+          uid={cloud.syncUid}
+          profile={cloud.profile}
+          onSignIn={() => setModal('account')}
+        />
+      )}
 
       <Toast message={toastMessage} />
 

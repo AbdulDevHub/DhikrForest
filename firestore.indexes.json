@@ -1,0 +1,21 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "weekIndex", "order": "ASCENDING" },
+        { "fieldPath": "weekTotal", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "weekIndex", "order": "ASCENDING" },
+        { "fieldPath": "weekTotal", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
